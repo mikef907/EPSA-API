@@ -9,7 +9,7 @@ var schema = buildSchema(`
     hello: String
   }
 `);
- 
+
 // The root provides a resolver function for each API endpoint
 var root = {
   hello: () => {
@@ -17,16 +17,20 @@ var root = {
   },
 };
 
+initDB().then(
+  () => console.log('Database initialized'),
+  () => console.error('Error initializing database')
+);
 
-initDB().then(() => console.log('Database initialized')
-, () => console.error('Error initializing database'));
- 
 var app = express();
 
-app.use('/graphql', graphqlHTTP({
-  schema: schema,
-  rootValue: root,
-  graphiql: true,
-}));
+app.use(
+  '/graphql',
+  graphqlHTTP({
+    schema: schema,
+    rootValue: root,
+    graphiql: true,
+  })
+);
 app.listen(4000);
 console.log('Running a GraphQL API server at http://localhost:4000/graphql');
