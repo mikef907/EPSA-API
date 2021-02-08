@@ -2,4 +2,4 @@ import { config } from 'dotenv';
 
 config();
 
-export const IsLive = process.env.LIVE;
+export const IsLive: boolean = !process.env.LIVE;

@@ -1,7 +1,17 @@
-import { ObjectType, Field, ID } from 'type-graphql';
+import { ObjectType, Field, ID, InputType } from 'type-graphql';
+
+export class User {
+  id!: number;
+  first_name!: string;
+  last_name!: string;
+  email!: string;
+  password!: string;
+  created_at!: Date;
+  updated_at!: Date;
+}
 
 @ObjectType()
-export class User {
+export class UserQuery implements Partial<User> {
   @Field((_type) => ID)
   id!: number;
   @Field()
@@ -10,10 +20,16 @@ export class User {
   last_name!: string;
   @Field()
   email!: string;
+}
+
+@InputType()
+export class UserInput implements Partial<User> {
+  @Field()
+  first_name!: string;
+  @Field()
+  last_name!: string;
+  @Field()
+  email!: string;
   @Field()
   password!: string;
-  @Field()
-  created_at!: Date;
-  @Field()
-  updated_at!: Date;
 }

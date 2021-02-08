@@ -12,5 +12,10 @@ export async function seed(knex: Knex): Promise<void> {
       last_name: 'Fullom',
       email: 'mikef907@gmail.com',
     },
+    {
+      first_name: 'Amanda',
+      last_name: 'Dale',
+      email: 'amandabdale@gmail.com',
+    },
   ]);
 }

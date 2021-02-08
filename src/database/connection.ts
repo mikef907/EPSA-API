@@ -5,6 +5,6 @@ const connections = require('../../knexfile');
 
 console.log('Is Live', IsLive);
 
-const knexConfig = IsLive ? connections.development : connections.production;
+const knexConfig = IsLive ? connections.production : connections.development;
 
 export const knex = Knex(knexConfig);

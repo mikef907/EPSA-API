@@ -3,6 +3,8 @@ import { knex } from './connection';
 
 const initDB = async () => {
   if (!IsLive) {
+    await knex.migrate.rollback();
+    console.log('Running latest migrations...');
     await knex.migrate.latest().then(
       () => {
         console.log('Migrations Completed!');
