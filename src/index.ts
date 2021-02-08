@@ -1,36 +1,35 @@
 import express from 'express';
+import 'reflect-metadata';
 import { graphqlHTTP } from 'express-graphql';
-import { buildSchema } from 'graphql';
 import initDB from './database';
+import { buildSchema } from 'type-graphql';
+import { UserResolver } from './graphql/Resolvers/UserResolver';
 
-// Construct a schema, using GraphQL schema language
-var schema = buildSchema(`
-  type Query {
-    hello: String
-  }
-`);
+async function main() {
+  // Construct a schema, using GraphQL schema language
+  var schema = await buildSchema({
+    resolvers: [UserResolver],
+  });
 
-// The root provides a resolver function for each API endpoint
-var root = {
-  hello: () => {
-    return 'Hello world!';
-  },
-};
+  var app = express();
 
-initDB().then(
-  () => console.log('Database initialized'),
-  () => console.error('Error initializing database')
-);
+  await initDB().then(
+    async () => {
+      console.log('Database initialized');
+    },
+    () => console.error('Error initializing database')
+  );
 
-var app = express();
+  app.use(
+    '/graphql',
+    graphqlHTTP({
+      schema: schema,
+      graphiql: true,
+    })
+  );
 
-app.use(
-  '/graphql',
-  graphqlHTTP({
-    schema: schema,
-    rootValue: root,
-    graphiql: true,
-  })
-);
-app.listen(4000);
-console.log('Running a GraphQL API server at http://localhost:4000/graphql');
+  app.listen(4000);
+  console.log('Running a GraphQL API server at http://localhost:4000/graphql');
+}
+
+main();
