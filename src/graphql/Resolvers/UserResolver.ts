@@ -1,12 +1,14 @@
-import { Arg, Mutation, Query, Resolver } from 'type-graphql';
+import { Arg, Authorized, Ctx, Mutation, Query, Resolver } from 'type-graphql';
 import { User, UserInput, UserQuery } from '../../classes/user';
 import { knex } from '../../database/connection';
+import argon2 from 'argon2';
 
 @Resolver((_of) => User)
 export class UserResolver {
   private readonly props = ['id', 'first_name', 'last_name', 'email'];
 
   @Query((_returns) => [UserQuery])
+  @Authorized()
   async users() {
     return await knex.select<User>(this.props).from('users');
   }
@@ -21,6 +23,8 @@ export class UserResolver {
 
   @Mutation((_returns) => UserQuery)
   async addUser(@Arg('data') newUser: UserInput) {
+    newUser.password = await argon2.hash(newUser.password);
+
     var result = await knex<User>('users')
       .returning(this.props)
       .insert<User[]>(newUser);
