@@ -10,7 +10,6 @@ import {
 import { User, UserInput, UserLogin, UserQuery } from '../../classes/user';
 import { knex } from '../../database/connection';
 import argon2 from 'argon2';
-import jwt from 'express-jwt';
 import { JwtSignature } from '../../config';
 import { sign } from 'jsonwebtoken';
 
@@ -52,9 +51,8 @@ export class UserResolver {
       .first()
       .then(async (user) => {
         if (user) {
-          if (await argon2.verify(user.password, login.password)) {
-            console.log('success!');
-
+          if (await argon2.verify(user.password as string, login.password)) {
+            delete user.password;
             return sign({ user: user }, JwtSignature, {
               issuer: 'pipa',
               audience: 'api',

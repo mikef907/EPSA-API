@@ -1,36 +1,37 @@
-import express, { request } from 'express';
+import express from 'express';
 import 'reflect-metadata';
-import { graphqlHTTP } from 'express-graphql';
 import initDB from './database';
-import { buildSchema } from 'type-graphql';
+import { AuthChecker, buildSchema } from 'type-graphql';
 import { UserResolver } from './graphql/Resolvers/UserResolver';
-import { knex } from './database/connection';
 import { Context } from './context';
 import { JwtSignature } from './config';
 import { verify } from 'jsonwebtoken';
+import { ApolloServer } from 'apollo-server-express';
+
+export const customAuthChecker: AuthChecker<Context> = (
+  { root, args, context, info },
+  roles
+) => {
+  // here we can read the user from context
+  // and check his permission in the db against the `roles` argument
+  // that comes from the `@Authorized` decorator, eg. ["ADMIN", "MODERATOR"]
+  const authHeader = context?.req?.headers?.authorization;
+
+  if (authHeader) {
+    const token = authHeader.split(' ')[1];
+    if (verify(token, JwtSignature, { issuer: 'pipa', audience: 'api' }))
+      return true;
+  }
+  return false;
+};
 
 async function main() {
+  console.log('Starting Server...');
   // Construct a schema, using GraphQL schema language
   var schema = await buildSchema({
     resolvers: [UserResolver],
-    authChecker: ({ root, args, context: Context, info }, roles) => {
-      console.log('Checking Auth');
-      const authHeader = context?.req?.headers?.authorization;
-      if (authHeader) {
-        const token = authHeader.split(' ')[1];
-        console.log(token);
-
-        console.log(
-          verify(token, JwtSignature, { issuer: 'pipa', audience: 'api' })
-        );
-      }
-
-      //console.log(context);
-      return false;
-    },
+    authChecker: customAuthChecker,
   });
-
-  var app = express();
 
   await initDB().then(
     async () => {
@@ -39,19 +40,19 @@ async function main() {
     () => console.error('Error initializing database')
   );
 
-  let context: Context = {
-    req: app.request,
-    res: app.response,
-  };
+  var app = express();
 
-  app.use(
-    '/graphql',
-    graphqlHTTP({
-      schema: schema,
-      graphiql: true,
-      context,
-    })
-  );
+  const server = new ApolloServer({
+    schema,
+    context: ({ req }) => {
+      const context = {
+        req,
+      };
+      return context;
+    },
+  });
+
+  server.applyMiddleware({ app });
 
   app.listen(4000);
   console.log('Running a GraphQL API server at http://localhost:4000/graphql');

@@ -13,7 +13,7 @@ export class User {
   last_name!: string;
   email!: string;
   dob!: Date;
-  password!: string;
+  password?: string;
   created_at!: Date;
   updated_at!: Date;
 }
