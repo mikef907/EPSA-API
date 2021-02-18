@@ -12,7 +12,6 @@ export class User {
   first_name!: string;
   last_name!: string;
   email!: string;
-  dob!: Date;
   password?: string;
   created_at!: Date;
   updated_at!: Date;
@@ -36,9 +35,6 @@ export class UserQuery implements Partial<User> {
   last_name!: string;
   @Field()
   email!: string;
-  @Authorized()
-  @Field()
-  dob!: Date;
 }
 
 @InputType()
@@ -51,6 +47,4 @@ export class UserInput extends UserLogin implements Partial<User> {
   email!: string;
   @Field()
   password!: string;
-  @Field()
-  dob!: Date;
 }

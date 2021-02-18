@@ -20,9 +20,7 @@ export class UserResolver {
   @Query((_returns) => [UserQuery])
   @Authorized()
   async users() {
-    return await knex
-      .select<User>(['dob', ...this.props])
-      .from('users');
+    return await knex.select<User>(this.props).from('users');
   }
 
   @Query((_returns) => UserQuery)
