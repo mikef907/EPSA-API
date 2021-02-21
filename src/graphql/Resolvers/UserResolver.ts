@@ -51,6 +51,8 @@ export class UserResolver {
         if (user) {
           if (await argon2.verify(user.password as string, login.password)) {
             delete user.password;
+            delete user.created_at;
+            delete user.updated_at;
             return sign({ user: user }, JwtSignature, {
               issuer: 'pipa',
               audience: 'api',
