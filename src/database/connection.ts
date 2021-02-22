@@ -1,7 +1,7 @@
 import { IsLive } from '../config';
 import Knex from 'knex';
 
-const connections = require('../../knexfile');
+const connections = require('./knexfile');
 
 console.log('Is Live', IsLive);
 

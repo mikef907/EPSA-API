@@ -48,3 +48,11 @@ export class UserInput extends UserLogin implements Partial<User> {
   @Field()
   password!: string;
 }
+
+@InputType()
+export class UserResetPassword {
+  @Field()
+  nonce!: string;
+  @Field()
+  password!: string;
+}

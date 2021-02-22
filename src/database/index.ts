@@ -2,8 +2,12 @@ import { IsLive } from '../config';
 import { knex } from './connection';
 
 const initDB = async () => {
+  console.log('Init DB');
   if (!IsLive) {
-    await knex.migrate.rollback();
+    await knex.migrate.rollback().then(
+      () => console.log('Rollback completed!'),
+      (err) => console.error('Error during rollback', err)
+    );
     console.log('Running latest migrations...');
     await knex.migrate.latest().then(
       () => {

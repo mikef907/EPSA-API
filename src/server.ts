@@ -37,7 +37,7 @@ async function main() {
     async () => {
       console.log('Database initialized');
     },
-    () => console.error('Error initializing database')
+    (err) => console.error('Error initializing database', err)
   );
 
   var app = express();

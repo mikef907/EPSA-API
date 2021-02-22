@@ -7,15 +7,75 @@ import {
   Query,
   Resolver,
 } from 'type-graphql';
-import { User, UserInput, UserLogin, UserQuery } from '../../classes/user';
+import {
+  User,
+  UserInput,
+  UserLogin,
+  UserQuery,
+  UserResetPassword,
+} from '../../classes/user';
 import { knex } from '../../database/connection';
 import argon2 from 'argon2';
 import { JwtSignature } from '../../config';
 import { sign } from 'jsonwebtoken';
+import { isEmail } from 'class-validator';
+import { Nonce } from '../../classes/nonce';
+import dayjs from 'dayjs';
+import { v4 } from 'uuid';
+import sendEmail from '../../sendEmail';
 
 @Resolver((_of) => User)
 export class UserResolver {
   private readonly props = ['id', 'first_name', 'last_name', 'email'];
+
+  @Mutation((_returns) => Boolean)
+  async resetPassword(@Arg('input') input: UserResetPassword) {
+    var nonce = await knex<Nonce>('nonces')
+      .where({ nonce: input.nonce, used: false })
+      .first();
+
+    if (nonce) {
+      if (dayjs(nonce.expiry).isAfter(dayjs())) {
+        var password = await argon2.hash(input.password);
+
+        await knex<User>('users')
+          .update({ password })
+          .where({ id: nonce.userId });
+
+        return true;
+      }
+      return false;
+    }
+    return false;
+  }
+
+  @Mutation((_returns) => Boolean)
+  async forgotPassword(@Arg('email') email: string) {
+    var user = await knex<User>('users')
+      .select<User>(this.props)
+      .where({ email })
+      .first();
+
+    if (user) {
+      var nonce = await knex<Nonce>('nonces')
+        .returning(['nonce'])
+        .insert<Nonce[]>({
+          nonce: v4(),
+          userId: user.id,
+          expiry: dayjs().add(1, 'day').toDate(),
+        });
+
+      console.log(nonce);
+
+      const resetLink = `<a href="http://localhost:3000/reset-password/${nonce[0].nonce}">reset link</a>`;
+
+      console.log(resetLink);
+
+      // await sendEmail(user.email, resetLink, 'Password Reset Link');
+
+      return true;
+    } else return false;
+  }
 
   @Query((_returns) => [UserQuery])
   @Authorized()
