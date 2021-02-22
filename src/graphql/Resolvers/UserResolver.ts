@@ -18,11 +18,11 @@ import { knex } from '../../database/connection';
 import argon2 from 'argon2';
 import { JwtSignature } from '../../config';
 import { sign } from 'jsonwebtoken';
-import { isEmail } from 'class-validator';
 import { Nonce } from '../../classes/nonce';
 import dayjs from 'dayjs';
 import { v4 } from 'uuid';
 import sendEmail from '../../sendEmail';
+import { AuthenticationError } from 'apollo-server';
 
 @Resolver((_of) => User)
 export class UserResolver {
@@ -42,11 +42,15 @@ export class UserResolver {
           .update({ password })
           .where({ id: nonce.userId });
 
+        await knex<Nonce>('nonces')
+          .update({ used: true })
+          .where({ nonce: nonce.nonce, userId: nonce.userId });
+
         return true;
       }
-      return false;
+      return new AuthenticationError('Token is expired');
     }
-    return false;
+    throw new AuthenticationError('Token is invalid');
   }
 
   @Mutation((_returns) => Boolean)
@@ -74,7 +78,8 @@ export class UserResolver {
       // await sendEmail(user.email, resetLink, 'Password Reset Link');
 
       return true;
-    } else return false;
+    }
+    throw new AuthenticationError('Unable to find email');
   }
 
   @Query((_returns) => [UserQuery])
@@ -119,7 +124,7 @@ export class UserResolver {
             });
           }
         }
-        throw new Error('Bad Login');
+        throw new AuthenticationError('Invalid email or password');
       });
   }
 }
