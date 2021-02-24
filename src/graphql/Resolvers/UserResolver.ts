@@ -22,7 +22,7 @@ import { Nonce } from '../../classes/nonce';
 import dayjs from 'dayjs';
 import { v4 } from 'uuid';
 import sendEmail from '../../sendEmail';
-import { AuthenticationError } from 'apollo-server';
+import { AuthenticationError, UserInputError } from 'apollo-server';
 
 @Resolver((_of) => User)
 export class UserResolver {
@@ -96,15 +96,20 @@ export class UserResolver {
       .first();
   }
 
-  @Mutation((_returns) => UserQuery)
+  @Mutation((_returns) => String)
   async addUser(@Arg('data') newUser: UserInput) {
     newUser.password = await argon2.hash(newUser.password);
 
-    var result = await knex<User>('users')
-      .returning(this.props)
-      .insert<User[]>(newUser);
-
-    return result[0];
+    try {
+      var result = await knex<User>('users')
+        .returning(this.props)
+        .insert<User[]>(newUser);
+      return this.getToken(result[0]);
+    } catch (err) {
+      if (err.code == '23505')
+        throw new UserInputError('Account with email already exists');
+      else throw err;
+    }
   }
 
   @Query((_returns) => String)
@@ -115,16 +120,20 @@ export class UserResolver {
       .then(async (user) => {
         if (user) {
           if (await argon2.verify(user.password as string, login.password)) {
-            delete user.password;
-            delete user.created_at;
-            delete user.updated_at;
-            return sign({ user: user }, JwtSignature, {
-              issuer: 'pipa',
-              audience: 'api',
-            });
+            return this.getToken(user);
           }
         }
         throw new AuthenticationError('Invalid email or password');
       });
+  }
+
+  private async getToken(user: User) {
+    delete user.password;
+    delete user.created_at;
+    delete user.updated_at;
+    return sign({ user: user }, JwtSignature, {
+      issuer: 'pipa',
+      audience: 'api',
+    });
   }
 }
