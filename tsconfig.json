@@ -39,5 +39,5 @@
     "emitDecoratorMetadata": true
   },
   "exclude": ["node_modules"],
-  "include": ["./src/**/*.tsx", "./src/**/*.ts", "knexfile.ts"]
+  "include": ["./src/**/*.tsx", "./src/**/*.ts", "src/database/knexfile.ts"]
 }
