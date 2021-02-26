@@ -7,6 +7,7 @@ import { Context } from './context';
 import { JwtSignature } from './config';
 import { verify } from 'jsonwebtoken';
 import { ApolloServer } from 'apollo-server-express';
+import { EventResolver } from './graphql/Resolvers/EventResolver';
 
 export const customAuthChecker: AuthChecker<Context> = (
   { root, args, context, info },
@@ -29,7 +30,7 @@ async function main() {
   console.log('Starting Server...');
   // Construct a schema, using GraphQL schema language
   var schema = await buildSchema({
-    resolvers: [UserResolver],
+    resolvers: [UserResolver, EventResolver],
     authChecker: customAuthChecker,
   });
 
