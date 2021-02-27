@@ -6,6 +6,7 @@ import {
   Authorized,
   ArgsType,
 } from 'type-graphql';
+import { Role, RoleQuery } from './role';
 
 export class User {
   id!: number;
@@ -15,6 +16,7 @@ export class User {
   password?: string;
   created_at?: Date;
   updated_at?: Date;
+  roles!: Role[];
 }
 
 @ArgsType()
@@ -35,6 +37,8 @@ export class UserQuery implements Partial<User> {
   last_name!: string;
   @Field()
   email!: string;
+  @Field((_type) => [RoleQuery])
+  roles!: Role[];
 }
 
 @InputType()

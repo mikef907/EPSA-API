@@ -1,24 +1,78 @@
 import * as Knex from 'knex';
 import { User } from '../../classes/user';
 import argon2 from 'argon2';
+import { Role } from '../../classes/role';
 
 export async function seed(knex: Knex): Promise<void> {
   // Deletes ALL existing entries
   await knex('users').del();
 
+  await knex('roles').del();
+
+  await knex('user_role').del();
+
+  const roles = await knex<Role>('roles')
+    .insert([
+      {
+        name: 'User',
+      },
+      {
+        name: 'Staff',
+      },
+      {
+        name: 'Admin',
+      },
+    ])
+    .returning('*');
+
   // Inserts seed entries
-  await knex<User>('users').insert([
+  const users = await knex<User>('users')
+    .insert([
+      {
+        first_name: 'Michael',
+        last_name: 'Fullom',
+        email: 'mikef907@gmail.com',
+        password: await argon2.hash('password'),
+      },
+      {
+        first_name: 'Amanda',
+        last_name: 'Dale',
+        email: 'amandabdale@gmail.com',
+        password: await argon2.hash('password'),
+      },
+      {
+        first_name: 'Bob',
+        last_name: 'Vance',
+        email: 'bob@gmail.com',
+        password: await argon2.hash('password'),
+      },
+    ])
+    .returning('*');
+
+  await knex('user_role').insert([
     {
-      first_name: 'Michael',
-      last_name: 'Fullom',
-      email: 'mikef907@gmail.com',
-      password: await argon2.hash('password'),
+      userId: users[0].id,
+      roleId: roles[0].id,
     },
     {
-      first_name: 'Amanda',
-      last_name: 'Dale',
-      email: 'amandabdale@gmail.com',
-      password: await argon2.hash('password'),
+      userId: users[0].id,
+      roleId: roles[1].id,
+    },
+    {
+      userId: users[0].id,
+      roleId: roles[2].id,
+    },
+    {
+      userId: users[1].id,
+      roleId: roles[0].id,
+    },
+    {
+      userId: users[1].id,
+      roleId: roles[1].id,
+    },
+    {
+      userId: users[2].id,
+      roleId: roles[0].id,
     },
   ]);
 }

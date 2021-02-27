@@ -23,10 +23,11 @@ import dayjs from 'dayjs';
 import { v4 } from 'uuid';
 import sendEmail from '../../sendEmail';
 import { AuthenticationError, UserInputError } from 'apollo-server';
+import { Role } from '../../classes/role';
 
 @Resolver((_of) => User)
 export class UserResolver {
-  private readonly props = ['id', 'first_name', 'last_name', 'email'];
+  private readonly props = ['users.id', 'first_name', 'last_name', 'email'];
 
   @Mutation((_returns) => Boolean)
   async resetPassword(@Arg('input') input: UserResetPassword) {
@@ -85,15 +86,30 @@ export class UserResolver {
   @Query((_returns) => [UserQuery])
   @Authorized()
   async users() {
-    return await knex.select<User>(this.props).from('users');
+    return await knex
+      .select<User[]>(this.props)
+      .from('users')
+      .then(async (users) => {
+        await Promise.all(
+          users.map(async (user) => {
+            user.roles = await this.getRoles(user.id);
+          })
+        );
+        return users;
+      });
   }
 
   @Query((_returns) => UserQuery)
   async user(@Arg('id') id: number) {
-    return await knex<User>('users')
-      .where({ id })
+    return await knex
       .select<User>(this.props)
-      .first();
+      .where({ id })
+      .from('users')
+      .first()
+      .then(async (user) => {
+        if (user) user.roles = await this.getRoles(user.id);
+        return user;
+      });
   }
 
   @Mutation((_returns) => String)
@@ -112,7 +128,7 @@ export class UserResolver {
     }
   }
 
-  @Query((_returns) => String)
+  @Mutation((_returns) => String)
   async login(@Args() login: UserLogin) {
     return await knex<User>('users')
       .where({ email: login.email })
@@ -120,11 +136,20 @@ export class UserResolver {
       .then(async (user) => {
         if (user) {
           if (await argon2.verify(user.password as string, login.password)) {
+            user.roles = await this.getRoles(user.id);
             return this.getToken(user);
           }
         }
         throw new AuthenticationError('Invalid email or password');
       });
+  }
+
+  private async getRoles(userId: number) {
+    return await knex
+      .join('roles', 'user_role.roleId', '=', 'roles.id')
+      .select('roles.name')
+      .where({ userId })
+      .from('user_role');
   }
 
   private async getToken(user: User) {

@@ -1,11 +1,11 @@
 import * as Knex from 'knex';
 
 export async function up(knex: Knex): Promise<void> {
-  knex.schema.createTable('events', (table) => {
+  return knex.schema.createTable('events', (table) => {
     table.increments();
     table.timestamps(true, true);
-    table.integer('parentId');
-    table.foreign('parentId').references('events.id').nullable();
+    table.integer('parentId').nullable();
+    table.foreign('parentId').references('events.id');
     table.string('name');
     table.string('description');
     table.boolean('allDay');
@@ -15,5 +15,5 @@ export async function up(knex: Knex): Promise<void> {
 }
 
 export async function down(knex: Knex): Promise<void> {
-  knex.schema.dropSchema('events');
+  return knex.schema.dropTable('events');
 }
