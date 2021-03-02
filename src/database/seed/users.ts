@@ -2,6 +2,7 @@ import * as Knex from 'knex';
 import { User } from '../../classes/user';
 import argon2 from 'argon2';
 import { Role } from '../../classes/role';
+import { Event } from '../../classes/event';
 
 export async function seed(knex: Knex): Promise<void> {
   // Deletes ALL existing entries
@@ -73,6 +74,26 @@ export async function seed(knex: Knex): Promise<void> {
     {
       userId: users[2].id,
       roleId: roles[0].id,
+    },
+  ]);
+
+  await knex<Event>('events').insert([
+    {
+      name: 'Test',
+      description: 'Testing',
+      start: new Date(),
+    },
+    {
+      name: 'Test2',
+      description: 'Testing2',
+      start: new Date(),
+      end: new Date(),
+    },
+    {
+      name: 'Test3',
+      description: 'Testing3',
+      start: new Date(),
+      allDay: true,
     },
   ]);
 }
