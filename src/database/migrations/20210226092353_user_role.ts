@@ -2,8 +2,8 @@ import * as Knex from 'knex';
 
 export async function up(knex: Knex): Promise<void> {
   return knex.schema.createTable('user_role', (table) => {
-    table.integer('userId').references('users.id');
-    table.integer('roleId').references('roles.id');
+    table.integer('userId').notNullable().references('users.id');
+    table.integer('roleId').notNullable().references('roles.id');
     table.timestamps(true, true);
   });
 }

@@ -117,10 +117,26 @@ export class UserResolver {
     newUser.password = await argon2.hash(newUser.password);
 
     try {
-      var result = await knex<User>('users')
-        .returning(this.props)
-        .insert<User[]>(newUser);
-      return this.getToken(result[0]);
+      return await knex<User>('users')
+        .insert<User>(newUser)
+        .returning('*')
+        .then(async (_) => {
+          const user = _[0];
+
+          var userRole = await knex<Role>('roles')
+            .where({ name: 'User' })
+            .first();
+
+          await knex('user_role').insert([
+            {
+              userId: user.id,
+              roleId: userRole?.id,
+            },
+          ]);
+
+          user.roles = await this.getRoles(user.id);
+          return this.getToken(user);
+        });
     } catch (err) {
       if (err.code == '23505')
         throw new UserInputError('Account with email already exists');
