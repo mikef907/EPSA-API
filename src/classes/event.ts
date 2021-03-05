@@ -7,7 +7,7 @@ export class Event {
   description!: string;
   allDay!: boolean;
   start!: Date;
-  end?: Date;
+  end?: Date | null;
   created_at!: Date;
   updated_at!: Date;
 }
@@ -36,12 +36,14 @@ export class EventQuery implements Partial<Event> {
 
 @InputType()
 export class EventInput implements Partial<Event> {
+  @Field()
+  id?: number;
   @Field({ nullable: true })
   parentId?: number;
   @Field()
   name!: string;
   @Field()
-  description!: string;
+  description?: string;
   @Field({ nullable: true })
   allDay?: boolean;
   @Field()

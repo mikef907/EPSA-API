@@ -7,10 +7,10 @@ export async function up(knex: Knex): Promise<void> {
     table.integer('parentId').nullable();
     table.foreign('parentId').references('events.id');
     table.string('name');
-    table.string('description');
+    table.string('description').nullable();
     table.boolean('allDay');
     table.dateTime('start');
-    table.dateTime('end');
+    table.dateTime('end').nullable();
   });
 }
 
