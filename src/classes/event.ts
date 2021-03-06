@@ -36,7 +36,7 @@ export class EventQuery implements Partial<Event> {
 
 @InputType()
 export class EventInput implements Partial<Event> {
-  @Field()
+  @Field({ nullable: true })
   id?: number;
   @Field({ nullable: true })
   parentId?: number;

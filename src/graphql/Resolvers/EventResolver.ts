@@ -13,6 +13,8 @@ export class EventResolver {
 
   @Mutation((_of) => EventQuery)
   async addEvent(@Arg('event') event: EventInput) {
+    if (!dayjs(event.end).isValid()) delete event.end;
+
     const result = await knex<Event>('events')
       .returning('*')
       .insert<Event[]>(event);
@@ -22,17 +24,12 @@ export class EventResolver {
 
   @Mutation((_of) => EventQuery)
   async updateEvent(@Arg('event') event: EventInput) {
+    if (!dayjs(event.end).isValid()) delete event.end;
+
     const result = await knex<Event>('events')
       .returning('*')
       .where({ id: event.id })
-      .update<Event[]>({
-        parentId: event.parentId,
-        name: event.name,
-        description: event.description,
-        start: event.start,
-        end: dayjs(event.end).isValid() ? event.end : null,
-        allDay: event.allDay,
-      });
+      .update<Event[]>(event);
 
     return result[0];
   }
