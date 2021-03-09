@@ -24,6 +24,7 @@ import { v4 } from 'uuid';
 import sendEmail from '../../sendEmail';
 import { AuthenticationError, UserInputError } from 'apollo-server';
 import { Role } from '../../classes/role';
+import { Staff } from '../../classes/staff';
 
 @Resolver((_of) => User)
 export class UserResolver {
@@ -107,7 +108,16 @@ export class UserResolver {
       .from('users')
       .first()
       .then(async (user) => {
-        if (user) user.roles = await this.getRoles(user.id);
+        if (user) {
+          user.roles = await this.getRoles(user.id);
+
+          if (user.roles.some((r) => r.name === 'Staff')) {
+            user.staff = await knex<Staff>('staff')
+              .where({ userId: user.id })
+              .first();
+          }
+        }
+
         return user;
       });
   }

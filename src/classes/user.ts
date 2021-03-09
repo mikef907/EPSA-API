@@ -7,6 +7,7 @@ import {
   ArgsType,
 } from 'type-graphql';
 import { Role, RoleQuery } from './role';
+import { Staff, StaffQuery } from './staff';
 
 export class User {
   id!: number;
@@ -17,6 +18,7 @@ export class User {
   created_at?: Date;
   updated_at?: Date;
   roles!: Role[];
+  staff?: Staff;
 }
 
 @ArgsType()
@@ -39,6 +41,8 @@ export class UserQuery implements Partial<User> {
   email!: string;
   @Field((_type) => [RoleQuery])
   roles!: Role[];
+  @Field((_type) => StaffQuery, { nullable: true })
+  staff?: Staff;
 }
 
 @InputType()

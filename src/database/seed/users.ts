@@ -3,6 +3,8 @@ import { User } from '../../classes/user';
 import argon2 from 'argon2';
 import { Role } from '../../classes/role';
 import { Event } from '../../classes/event';
+import { Staff } from '../../classes/staff';
+import dayjs from 'dayjs';
 
 export async function seed(knex: Knex): Promise<void> {
   // Deletes ALL existing entries
@@ -57,10 +59,6 @@ export async function seed(knex: Knex): Promise<void> {
     },
     {
       userId: users[0].id,
-      roleId: roles[1].id,
-    },
-    {
-      userId: users[0].id,
       roleId: roles[2].id,
     },
     {
@@ -74,6 +72,13 @@ export async function seed(knex: Knex): Promise<void> {
     {
       userId: users[2].id,
       roleId: roles[0].id,
+    },
+  ]);
+
+  await knex<Staff>('staff').insert([
+    {
+      userId: users[1].id,
+      start: dayjs('1-1-2021').toDate(),
     },
   ]);
 
