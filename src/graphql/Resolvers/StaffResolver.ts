@@ -66,8 +66,8 @@ export class StaffResolver {
   async updateStaff(@Arg('staff') staff: StaffInput) {
     try {
       return await knex.transaction(async (trx) => {
-        const _user: any = Object.assign({}, staff.user);
-        const _staff: any = Object.assign({}, staff);
+        const _user: Partial<User> = Object.assign({}, staff.user);
+        const _staff: Partial<Staff> = Object.assign({}, staff);
 
         delete _staff.user;
         delete _staff.id;
