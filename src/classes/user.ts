@@ -18,7 +18,6 @@ export class User {
   created_at?: Date;
   updated_at?: Date;
   roles!: Role[];
-  staff?: Staff;
 }
 
 @ArgsType()
@@ -41,12 +40,22 @@ export class UserQuery implements Partial<User> {
   email!: string;
   @Field((_type) => [RoleQuery])
   roles!: Role[];
-  @Field((_type) => StaffQuery, { nullable: true })
-  staff?: Staff;
 }
 
 @InputType()
-export class UserInput extends UserLogin implements Partial<User> {
+export class UserInput implements Partial<User> {
+  @Field({ nullable: true })
+  first_name?: string;
+  @Field({ nullable: true })
+  last_name?: string;
+  @Field({ nullable: true })
+  email?: string;
+  @Field({ nullable: true })
+  password?: string;
+}
+
+@InputType()
+export class NewUserInput implements Partial<User> {
   @Field()
   first_name!: string;
   @Field()

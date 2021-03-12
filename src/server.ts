@@ -5,9 +5,11 @@ import { AuthChecker, buildSchema } from 'type-graphql';
 import { UserResolver } from './graphql/Resolvers/UserResolver';
 import { Context } from './context';
 import { JwtSignature } from './config';
-import { verify } from 'jsonwebtoken';
+import { decode, verify } from 'jsonwebtoken';
 import { ApolloServer } from 'apollo-server-express';
 import { EventResolver } from './graphql/Resolvers/EventResolver';
+import { graphqlUploadExpress } from 'graphql-upload';
+import { StaffResolver } from './graphql/Resolvers/StaffResolver';
 
 export const customAuthChecker: AuthChecker<Context> = (
   { root, args, context, info },
@@ -20,8 +22,21 @@ export const customAuthChecker: AuthChecker<Context> = (
 
   if (authHeader) {
     const token = authHeader.split(' ')[1];
-    if (verify(token, JwtSignature, { issuer: 'pipa', audience: 'api' }))
+
+    if (verify(token, JwtSignature, { issuer: 'pipa', audience: 'api' })) {
+      const decoded = decode(token) as any;
+
+      if (
+        roles.length > 0 &&
+        !roles.some((role) =>
+          decoded.user.roles.some((r: any) => r.name === role)
+        )
+      ) {
+        return false;
+      }
+
       return true;
+    }
   }
   return false;
 };
@@ -30,7 +45,7 @@ async function main() {
   console.log('Starting Server...');
   // Construct a schema, using GraphQL schema language
   var schema = await buildSchema({
-    resolvers: [UserResolver, EventResolver],
+    resolvers: [UserResolver, EventResolver, StaffResolver],
     authChecker: customAuthChecker,
   });
 
@@ -42,6 +57,8 @@ async function main() {
   );
 
   var app = express();
+
+  //app.use(graphqlUploadExpress);
 
   const server = new ApolloServer({
     schema,

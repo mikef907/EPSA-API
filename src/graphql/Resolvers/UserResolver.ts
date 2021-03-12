@@ -8,6 +8,7 @@ import {
   Resolver,
 } from 'type-graphql';
 import {
+  NewUserInput,
   User,
   UserInput,
   UserLogin,
@@ -24,7 +25,6 @@ import { v4 } from 'uuid';
 import sendEmail from '../../sendEmail';
 import { AuthenticationError, UserInputError } from 'apollo-server';
 import { Role } from '../../classes/role';
-import { Staff } from '../../classes/staff';
 
 @Resolver((_of) => User)
 export class UserResolver {
@@ -85,7 +85,7 @@ export class UserResolver {
   }
 
   @Query((_returns) => [UserQuery])
-  @Authorized()
+  @Authorized(['Staff', 'Admin'])
   async users() {
     return await knex
       .select<User[]>(this.props)
@@ -110,12 +110,6 @@ export class UserResolver {
       .then(async (user) => {
         if (user) {
           user.roles = await this.getRoles(user.id);
-
-          if (user.roles.some((r) => r.name === 'Staff')) {
-            user.staff = await knex<Staff>('staff')
-              .where({ userId: user.id })
-              .first();
-          }
         }
 
         return user;
@@ -123,7 +117,7 @@ export class UserResolver {
   }
 
   @Mutation((_returns) => String)
-  async addUser(@Arg('data') newUser: UserInput) {
+  async addUser(@Arg('newUser') newUser: NewUserInput) {
     newUser.password = await argon2.hash(newUser.password);
 
     try {
@@ -146,6 +140,38 @@ export class UserResolver {
 
           user.roles = await this.getRoles(user.id);
           return this.getToken(user);
+        });
+    } catch (err) {
+      if (err.code == '23505')
+        throw new UserInputError('Account with email already exists');
+      else throw err;
+    }
+  }
+
+  @Mutation((_returns) => String)
+  async updateUser(@Arg('data') user: UserInput) {
+    if (user.password) user.password = await argon2.hash(user.password);
+
+    try {
+      return await knex<User>('users')
+        .insert<User>(user)
+        .returning('*')
+        .then(async (_) => {
+          const _user = _[0];
+
+          var userRole = await knex<Role>('roles')
+            .where({ name: 'User' })
+            .first();
+
+          await knex('user_role').insert([
+            {
+              userId: _user.id,
+              roleId: userRole?.id,
+            },
+          ]);
+
+          _user.roles = await this.getRoles(_user.id);
+          return this.getToken(_user);
         });
     } catch (err) {
       if (err.code == '23505')
