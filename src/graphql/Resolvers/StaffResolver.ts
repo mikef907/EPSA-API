@@ -1,7 +1,17 @@
-import { Arg, Mutation, Query, Resolver } from 'type-graphql';
+import { FileUpload, GraphQLUpload } from 'graphql-upload';
+import { createWriteStream } from 'fs';
+//import { Stream } from 'stream';
+import { Arg, Authorized, Mutation, Query, Resolver } from 'type-graphql';
 import { Staff, StaffInput, StaffQuery } from '../../classes/staff';
 import { User } from '../../classes/user';
 import { knex } from '../../database/connection';
+
+// export interface Upload {
+//   filename: string;
+//   mimetype: string;
+//   encoding: string;
+//   createReadStream: () => Stream;
+// }
 
 @Resolver((_of) => Staff)
 export class StaffResolver {
@@ -91,4 +101,26 @@ export class StaffResolver {
 
   @Mutation((_returns) => Boolean)
   async removeStaff() {}
+
+  @Mutation(() => Boolean)
+  @Authorized()
+  async uploadAvatar(
+    @Arg('file', (type) => GraphQLUpload) file: FileUpload,
+    @Arg('userId') userId: number
+  ): Promise<Boolean> {
+    return new Promise(async (resolve, reject) =>
+      file
+        .createReadStream()
+        .pipe(
+          createWriteStream(__dirname + `/../../../../images/${file.filename}`)
+        )
+        .on('finish', async () => {
+          await knex<Staff>('staff')
+            .update({ img: file.filename })
+            .where({ userId });
+          return resolve(true);
+        })
+        .on('error', () => reject(false))
+    );
+  }
 }

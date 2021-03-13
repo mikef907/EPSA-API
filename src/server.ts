@@ -4,12 +4,13 @@ import initDB from './database';
 import { AuthChecker, buildSchema } from 'type-graphql';
 import { UserResolver } from './graphql/Resolvers/UserResolver';
 import { Context } from './context';
-import { JwtSignature } from './config';
+import { IsLive, JwtSignature } from './config';
 import { decode, verify } from 'jsonwebtoken';
 import { ApolloServer } from 'apollo-server-express';
 import { EventResolver } from './graphql/Resolvers/EventResolver';
-import { graphqlUploadExpress } from 'graphql-upload';
 import { StaffResolver } from './graphql/Resolvers/StaffResolver';
+import { graphqlUploadExpress } from 'graphql-upload';
+import path from 'path';
 
 export const customAuthChecker: AuthChecker<Context> = (
   { root, args, context, info },
@@ -58,8 +59,6 @@ async function main() {
 
   var app = express();
 
-  //app.use(graphqlUploadExpress);
-
   const server = new ApolloServer({
     schema,
     context: ({ req }) => {
@@ -68,11 +67,17 @@ async function main() {
       };
       return context;
     },
+    uploads: false,
   });
+
+  app.use(graphqlUploadExpress({ maxFiles: 10 }));
+
+  app.use('/images', express.static(path.join(__dirname, '/../../images')));
 
   server.applyMiddleware({ app });
 
-  app.listen(4000);
+  app.listen(IsLive ? 80 : 4000);
+
   console.log('Running a GraphQL API server at http://localhost:4000/graphql');
 }
 

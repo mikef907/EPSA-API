@@ -23,8 +23,9 @@ import { Nonce } from '../../classes/nonce';
 import dayjs from 'dayjs';
 import { v4 } from 'uuid';
 import sendEmail from '../../sendEmail';
-import { AuthenticationError, UserInputError } from 'apollo-server';
+import { AuthenticationError, UserInputError } from 'apollo-server-express';
 import { Role } from '../../classes/role';
+import { Staff } from '../../classes/staff';
 
 @Resolver((_of) => User)
 export class UserResolver {
@@ -189,7 +190,17 @@ export class UserResolver {
         if (user) {
           if (await argon2.verify(user.password as string, login.password)) {
             user.roles = await this.getRoles(user.id);
-            return this.getToken(user);
+
+            let img: { value: string | null } | undefined | null;
+
+            if (user.roles.some((r) => r.name === 'Staff')) {
+              img = await knex('staff')
+                .select<{ value: string | null }>('img as value')
+                .where({ userId: user.id })
+                .first();
+            }
+
+            return this.getToken(user, img);
           }
         }
         throw new AuthenticationError('Invalid email or password');
@@ -204,11 +215,20 @@ export class UserResolver {
       .from('user_role');
   }
 
-  private async getToken(user: User) {
+  private async getToken(
+    user: User,
+    img: { value: string | null } | undefined | null = null
+  ) {
     delete user.password;
     delete user.created_at;
     delete user.updated_at;
-    return sign({ user: user }, JwtSignature, {
+
+    const token = {
+      user: user,
+      img: img?.value,
+    };
+
+    return sign(token, JwtSignature, {
       issuer: 'pipa',
       audience: 'api',
     });
