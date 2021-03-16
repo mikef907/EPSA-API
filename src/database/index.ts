@@ -8,18 +8,19 @@ const initDB = async () => {
       () => console.log('Rollback completed!'),
       (err) => console.error('Error during rollback', err)
     );
-    console.log('Running latest migrations...');
-    await knex.migrate.latest().then(
-      () => {
-        console.log('Migrations Completed!');
-        knex.seed.run().then(
-          () => console.log('Seeding Completed!'),
-          (err) => console.error(err)
-        );
-      },
-      (err: any) => console.error(err)
-    );
   }
+
+  console.log('Running latest migrations...');
+  await knex.migrate.latest().then(
+    () => {
+      console.log('Migrations Completed!');
+      knex.seed.run().then(
+        () => console.log('Seeding Completed!'),
+        (err) => console.error(err)
+      );
+    },
+    (err: any) => console.error(err)
+  );
 };
 
 export default initDB;

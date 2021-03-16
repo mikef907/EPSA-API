@@ -76,7 +76,7 @@ async function main() {
 
   server.applyMiddleware({ app });
 
-  app.listen(IsLive ? 80 : 4000);
+  app.listen(IsLive ? 443 : 4000);
 
   console.log('Running a GraphQL API server at http://localhost:4000/graphql');
 }
