@@ -1,4 +1,3 @@
-import { WSAEHOSTUNREACH } from 'constants';
 import dayjs from 'dayjs';
 import { Arg, Mutation, Query, Resolver } from 'type-graphql';
 import { Event, EventInput, EventQuery } from '../../classes/event';
