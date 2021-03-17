@@ -79,8 +79,8 @@ async function main() {
   server.applyMiddleware({ app });
 
   const options = {
-    key: fs.readFileSync(path.join(__dirname, '/..key.pem')),
-    cert: fs.readFileSync(path.join(__dirname, '/..cert.pem')),
+    key: fs.readFileSync(path.join(__dirname, '/../key.pem')),
+    cert: fs.readFileSync(path.join(__dirname, '/../cert.pem')),
   };
 
   https.createServer(options, app).listen(443);
