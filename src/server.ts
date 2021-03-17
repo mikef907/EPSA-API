@@ -12,6 +12,7 @@ import { StaffResolver } from './graphql/Resolvers/StaffResolver';
 import { graphqlUploadExpress } from 'graphql-upload';
 import path from 'path';
 import https from 'https';
+import fs from 'fs';
 
 export const customAuthChecker: AuthChecker<Context> = (
   { root, args, context, info },
@@ -77,7 +78,12 @@ async function main() {
 
   server.applyMiddleware({ app });
 
-  https.createServer({}, app).listen(443);
+  const options = {
+    key: fs.readFileSync(path.join(__dirname, '/..key.pem')),
+    cert: fs.readFileSync(path.join(__dirname, '/..cert.pem')),
+  };
+
+  https.createServer(options, app).listen(443);
 
   // app.listen(IsLive ? 443 : 4000);
 
