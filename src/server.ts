@@ -11,6 +11,7 @@ import { EventResolver } from './graphql/Resolvers/EventResolver';
 import { StaffResolver } from './graphql/Resolvers/StaffResolver';
 import { graphqlUploadExpress } from 'graphql-upload';
 import path from 'path';
+import https from 'https';
 
 export const customAuthChecker: AuthChecker<Context> = (
   { root, args, context, info },
@@ -76,7 +77,9 @@ async function main() {
 
   server.applyMiddleware({ app });
 
-  app.listen(IsLive ? 443 : 4000);
+  https.createServer({}, app).listen(443);
+
+  // app.listen(IsLive ? 443 : 4000);
 
   console.log('Running a GraphQL API server at http://localhost:4000/graphql');
 }

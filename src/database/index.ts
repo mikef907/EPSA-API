@@ -14,10 +14,12 @@ const initDB = async () => {
   await knex.migrate.latest().then(
     () => {
       console.log('Migrations Completed!');
-      knex.seed.run().then(
-        () => console.log('Seeding Completed!'),
-        (err) => console.error(err)
-      );
+      if (!IsLive) {
+        knex.seed.run().then(
+          () => console.log('Seeding Completed!'),
+          (err) => console.error(err)
+        );
+      }
     },
     (err: any) => console.error(err)
   );
