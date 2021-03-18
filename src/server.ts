@@ -79,8 +79,8 @@ async function main() {
   server.applyMiddleware({ app });
 
   const options = {
-    key: fs.readFileSync('/etc/letsencrypt/live/api.epsaak.org/fullchain.pem'),
-    cert: fs.readFileSync('/etc/letsencrypt/live/api.epsaak.org/privkey.pem'),
+    key: fs.readFileSync('/etc/letsencrypt/live/api.epsaak.org/privkey.pem'),
+    cert: fs.readFileSync('/etc/letsencrypt/live/api.epsaak.org/cert.pem'),
   };
 
   https.createServer(options, app).listen(443);
