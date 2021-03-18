@@ -11,8 +11,8 @@ import { EventResolver } from './graphql/Resolvers/EventResolver';
 import { StaffResolver } from './graphql/Resolvers/StaffResolver';
 import { graphqlUploadExpress } from 'graphql-upload';
 import path from 'path';
-//import https from 'https';
-//import fs from 'fs';
+import https from 'https';
+import fs from 'fs';
 
 export const customAuthChecker: AuthChecker<Context> = (
   { root, args, context, info },
@@ -78,14 +78,14 @@ async function main() {
 
   server.applyMiddleware({ app });
 
-  // const options = {
-  //   key: fs.readFileSync(path.join(__dirname, '../../key.pem')),
-  //   cert: fs.readFileSync(path.join(__dirname, '../../cert.pem')),
-  // };
+  const options = {
+    key: fs.readFileSync('/etc/letsencrypt/live/api.epsaak.org/fullchain.pem'),
+    cert: fs.readFileSync('/etc/letsencrypt/live/api.epsaak.org/privkey.pem'),
+  };
 
-  // https.createServer(options, app).listen(443);
+  https.createServer(options, app).listen(443);
 
-  app.listen(IsLive ? 80 : 4000);
+  // app.listen(IsLive ? 80 : 4000);
 
   console.log('Running a GraphQL API server at http://localhost:4000/graphql');
 }
