@@ -3,8 +3,8 @@ import { Field, ID, ObjectType } from 'type-graphql';
 export class Role {
   id!: number;
   name!: string;
-  created_at!: Date;
-  updated_at!: Date;
+  created_at?: Date;
+  updated_at?: Date;
 }
 
 @ObjectType()

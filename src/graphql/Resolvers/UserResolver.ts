@@ -3,6 +3,7 @@ import {
   Args,
   Authorized,
   Ctx,
+  ID,
   Mutation,
   Query,
   Resolver,
@@ -14,6 +15,7 @@ import {
   UserLogin,
   UserQuery,
   UserResetPassword,
+  UsersArgs,
 } from '../../classes/user';
 import { knex } from '../../database/connection';
 import argon2 from 'argon2';
@@ -86,19 +88,47 @@ export class UserResolver {
   }
 
   @Query((_returns) => [UserQuery])
-  @Authorized(['Staff', 'Admin'])
-  async users() {
-    return await knex
-      .select<User[]>(this.props)
+  //@Authorized(['Staff', 'Admin'])
+  async users(@Args() { inRoles, notInRoles }: UsersArgs) {
+    const users = await knex
+      .select(...this.props, 'name as role', 'roleId')
       .from('users')
-      .then(async (users) => {
-        await Promise.all(
-          users.map(async (user) => {
-            user.roles = await this.getRoles(user.id);
-          })
-        );
-        return users;
-      });
+      .join('user_role', 'user_role.userId', '=', 'users.id')
+      .join('roles', 'user_role.roleId', '=', 'roles.id');
+
+    return users
+      .reduce((p: User[], c) => {
+        const idx = p.findIndex((_) => _.id === c.id);
+        if (idx > -1) {
+          p[idx].roles.push({ id: c.roleId, name: c.role });
+        } else {
+          p.push({
+            id: c.id,
+            first_name: c.first_name,
+            last_name: c.last_name,
+            email: c.email,
+            roles: [
+              {
+                id: c.roleId,
+                name: c.role,
+              },
+            ],
+          });
+        }
+        return p;
+      }, [])
+      .filter(
+        (user) =>
+          !inRoles ||
+          inRoles.length === 0 ||
+          user.roles.some((role) => inRoles?.includes(role.name))
+      )
+      .filter(
+        (user) =>
+          !notInRoles ||
+          notInRoles.length === 0 ||
+          !user.roles.some((role) => notInRoles?.includes(role.name))
+      );
   }
 
   @Query((_returns) => UserQuery)
@@ -210,7 +240,7 @@ export class UserResolver {
   private async getRoles(userId: number) {
     return await knex
       .join('roles', 'user_role.roleId', '=', 'roles.id')
-      .select('roles.name')
+      .select('roles.id', 'roles.name')
       .where({ userId })
       .from('user_role');
   }

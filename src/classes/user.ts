@@ -7,7 +7,6 @@ import {
   ArgsType,
 } from 'type-graphql';
 import { Role, RoleQuery } from './role';
-import { Staff, StaffQuery } from './staff';
 
 export class User {
   id!: number;
@@ -18,6 +17,14 @@ export class User {
   created_at?: Date;
   updated_at?: Date;
   roles!: Role[];
+}
+
+@ArgsType()
+export class UsersArgs {
+  @Field((type) => [String], { nullable: true })
+  inRoles?: string[];
+  @Field((type) => [String], { nullable: true })
+  notInRoles?: string[];
 }
 
 @ArgsType()

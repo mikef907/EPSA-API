@@ -29,7 +29,19 @@ export class StaffQuery implements Partial<Staff> {
 }
 
 @InputType()
-export class StaffInput implements Partial<User> {
+export class NewStaffInput implements Partial<Staff> {
+  @Field()
+  userId!: number;
+  @Field()
+  start!: Date;
+  @Field({ nullable: true })
+  description?: string;
+  @Field((_type) => UserInput)
+  user!: User;
+}
+
+@InputType()
+export class StaffInput implements Partial<Staff> {
   @Field((_type) => ID)
   id!: number;
   @Field()

@@ -2,7 +2,12 @@ import { FileUpload, GraphQLUpload } from 'graphql-upload';
 import { createWriteStream } from 'fs';
 //import { Stream } from 'stream';
 import { Arg, Authorized, Mutation, Query, Resolver } from 'type-graphql';
-import { Staff, StaffInput, StaffQuery } from '../../classes/staff';
+import {
+  NewStaffInput,
+  Staff,
+  StaffInput,
+  StaffQuery,
+} from '../../classes/staff';
 import { User } from '../../classes/user';
 import { knex } from '../../database/connection';
 
@@ -69,8 +74,28 @@ export class StaffResolver {
       });
   }
 
-  @Mutation((_returns) => StaffQuery)
-  async addStaff(@Arg('staff') staff: StaffInput) {}
+  @Mutation((_returns) => Number)
+  @Authorized('Admin')
+  async addStaff(@Arg('staff') staff: NewStaffInput) {
+    const _user: Partial<User> = Object.assign({}, staff.user);
+    const _staff: Partial<Staff> = Object.assign({}, staff);
+
+    delete _staff.user;
+    delete _staff.id;
+    delete _user.id;
+
+    const result = await knex('staff').insert(_staff).returning('id');
+
+    const role = await knex
+      .select('id')
+      .from('roles')
+      .where({ name: 'Staff' })
+      .first();
+
+    await knex('user_role').insert({ userId: _staff.userId, roleId: role.id });
+
+    return result[0];
+  }
 
   @Mutation((_returns) => Boolean)
   async updateStaff(@Arg('staff') staff: StaffInput) {

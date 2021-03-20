@@ -78,16 +78,22 @@ async function main() {
 
   server.applyMiddleware({ app });
 
-  const options = {
-    key: fs.readFileSync('/etc/letsencrypt/live/api.epsaak.org/privkey.pem'),
-    cert: fs.readFileSync('/etc/letsencrypt/live/api.epsaak.org/cert.pem'),
-  };
+  console.log('Signature', JwtSignature);
+  console.log('live', IsLive);
 
-  https.createServer(options, app).listen(443);
+  if (IsLive) {
+    const options = {
+      key: fs.readFileSync('/etc/letsencrypt/live/api.epsaak.org/privkey.pem'),
+      cert: fs.readFileSync('/etc/letsencrypt/live/api.epsaak.org/cert.pem'),
+    };
 
-  // app.listen(IsLive ? 80 : 4000);
-
-  console.log('Running a GraphQL API server at http://localhost:4000/graphql');
+    https.createServer(options, app).listen(443);
+  } else {
+    app.listen(4000);
+    console.log(
+      'Running a GraphQL API server at http://localhost:4000/graphql'
+    );
+  }
 }
 
 main();
