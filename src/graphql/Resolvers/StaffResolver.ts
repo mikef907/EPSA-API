@@ -1,6 +1,5 @@
 import { FileUpload, GraphQLUpload } from 'graphql-upload';
 import { createWriteStream } from 'fs';
-//import { Stream } from 'stream';
 import { Arg, Authorized, Mutation, Query, Resolver } from 'type-graphql';
 import {
   NewStaffInput,
@@ -10,13 +9,7 @@ import {
 } from '../../classes/staff';
 import { User } from '../../classes/user';
 import { knex } from '../../database/connection';
-
-// export interface Upload {
-//   filename: string;
-//   mimetype: string;
-//   encoding: string;
-//   createReadStream: () => Stream;
-// }
+import { Role } from '../../classes/role';
 
 @Resolver((_of) => Staff)
 export class StaffResolver {
@@ -77,24 +70,29 @@ export class StaffResolver {
   @Mutation((_returns) => Number)
   @Authorized('Admin')
   async addStaff(@Arg('staff') staff: NewStaffInput) {
-    const _user: Partial<User> = Object.assign({}, staff.user);
-    const _staff: Partial<Staff> = Object.assign({}, staff);
+    try {
+      return await knex.transaction(async (trx) => {
+        const _user: Partial<User> = Object.assign({}, staff.user);
+        const _staff: Partial<Staff> = Object.assign({}, staff);
 
-    delete _staff.user;
-    delete _staff.id;
-    delete _user.id;
+        delete _staff.user;
+        delete _staff.id;
+        delete _user.id;
 
-    const result = await knex('staff').insert(_staff).returning('id');
+        const result = await trx('staff').insert(_staff).returning('id');
 
-    const role = await knex
-      .select('id')
-      .from('roles')
-      .where({ name: 'Staff' })
-      .first();
+        const role = await this.getStaffRole();
 
-    await knex('user_role').insert({ userId: _staff.userId, roleId: role.id });
+        await trx('user_role').insert({
+          userId: _staff.userId,
+          roleId: role.id,
+        });
 
-    return result[0];
+        return result[0];
+      });
+    } catch {
+      return null;
+    }
   }
 
   @Mutation((_returns) => Boolean)
@@ -125,7 +123,19 @@ export class StaffResolver {
   }
 
   @Mutation((_returns) => Boolean)
-  async removeStaff() {}
+  @Authorized('Admin')
+  async removeStaff(@Arg('id') id: number) {
+    try {
+      return knex.transaction(async (trx) => {
+        await trx<Staff>('staff').where({ userId: id }).delete();
+        const role = await this.getStaffRole();
+        await trx('user_role').where({ userId: id, roleId: role.id }).delete();
+        return true;
+      });
+    } catch {
+      return false;
+    }
+  }
 
   @Mutation(() => Boolean)
   @Authorized()
@@ -148,4 +158,11 @@ export class StaffResolver {
         .on('error', () => reject(false))
     );
   }
+
+  private getStaffRole = async () =>
+    (await knex
+      .select<Role>('*')
+      .where({ name: 'Staff' })
+      .from('roles')
+      .first()) as Role;
 }
