@@ -13,6 +13,7 @@ import { graphqlUploadExpress } from 'graphql-upload';
 import path from 'path';
 import https from 'https';
 import fs from 'fs';
+import { PostResolver } from './graphql/Resolvers/PostResolver';
 
 export const customAuthChecker: AuthChecker<Context> = (
   { root, args, context, info },
@@ -48,7 +49,7 @@ async function main() {
   console.log('Starting Server...');
   // Construct a schema, using GraphQL schema language
   var schema = await buildSchema({
-    resolvers: [UserResolver, EventResolver, StaffResolver],
+    resolvers: [UserResolver, EventResolver, StaffResolver, PostResolver],
     authChecker: customAuthChecker,
   });
 
@@ -78,7 +79,6 @@ async function main() {
 
   server.applyMiddleware({ app });
 
-  console.log('Signature', JwtSignature);
   console.log('live', IsLive);
 
   if (IsLive) {
