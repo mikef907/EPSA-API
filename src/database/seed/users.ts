@@ -5,6 +5,7 @@ import { Role } from '../../classes/role';
 import { Event } from '../../classes/event';
 import { Staff } from '../../classes/staff';
 import dayjs from 'dayjs';
+import { Post } from '../../classes/post';
 
 export async function seed(knex: Knex): Promise<void> {
   // Deletes ALL existing entries
@@ -99,6 +100,15 @@ export async function seed(knex: Knex): Promise<void> {
       description: 'Testing3',
       start: new Date(),
       allDay: true,
+    },
+  ]);
+
+  await knex<Post>('posts').insert([
+    {
+      headline: 'Welcome to EPSA!',
+      authorId: users[0].id,
+      published: new Date(),
+      content: '<p>We are coming soon!</p>',
     },
   ]);
 }
