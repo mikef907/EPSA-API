@@ -1,3 +1,4 @@
+import { isMagnetURI } from 'class-validator';
 import { decode } from 'jsonwebtoken';
 import { Arg, Authorized, Ctx, Mutation, Query, Resolver } from 'type-graphql';
 import { Post, PostInput, PostQuery } from '../../classes/post';
@@ -8,10 +9,35 @@ import { knex } from '../../database/connection';
 export class PostResolver {
   @Query((_returns) => [PostQuery])
   async allPosts() {
-    return await knex('posts')
-      .select(['*', 'users.*'])
-      .join('users', 'posts.authorId', '=', 'users.id')
+    var posts = await knex('posts')
+      .select([
+        '*',
+        'users.first_name',
+        'users.last_name',
+        'users.email',
+        'staff.img',
+        'staff.start',
+        'staff.description',
+      ])
+      .join('staff', 'posts.authorId', '=', 'staff.id')
+      .join('users', 'users.id', '=', 'staff.userId')
       .from('posts');
+
+    console.log('posts', posts);
+
+    return posts.map((p) => {
+      p.author = {
+        user: {
+          first_name: p.first_name,
+          last_name: p.last_name,
+          email: p.email,
+        },
+        img: p.img,
+        description: p.description,
+        start: p.start,
+      };
+      return p;
+    });
   }
 
   @Query((_returns) => PostQuery)
@@ -24,7 +50,14 @@ export class PostResolver {
   async addPost(@Arg('post') post: PostInput, @Ctx() ctx: Context) {
     const token = ctx.req.headers.authorization?.split(' ')[1] as string;
     const decoded = decode(token) as any;
-    post.authorId = decoded.user.id;
+
+    const staffId = await knex('staff')
+      .select('id')
+      .where({ userId: decoded.user.id })
+      .first();
+
+    post.authorId = staffId;
+
     const result = await knex('posts').insert(post).returning('id');
     return result[0];
   }

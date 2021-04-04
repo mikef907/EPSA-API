@@ -1,10 +1,10 @@
 import { Field, ID, InputType, ObjectType } from 'type-graphql';
-import { User, UserQuery } from './user';
+import { Staff, StaffQuery } from './staff';
 
 export class Post {
   id!: number;
   authorId!: number;
-  author?: User;
+  author?: Staff;
   published?: Date;
   headline!: string;
   imgUrl?: string;
@@ -19,8 +19,8 @@ export class PostQuery implements Partial<Post> {
   id!: number;
   @Field()
   authorId!: number;
-  @Field((_type) => UserQuery, { nullable: true })
-  author?: User;
+  @Field((_type) => StaffQuery, { nullable: true })
+  author?: Staff;
   @Field({ nullable: true })
   published?: Date;
   @Field()

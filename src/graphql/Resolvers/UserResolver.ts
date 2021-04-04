@@ -74,8 +74,6 @@ export class UserResolver {
           expiry: dayjs().add(1, 'day').toDate(),
         });
 
-      console.log(nonce);
-
       const resetLink = `<a href="http://localhost:3000/reset-password/${nonce[0].nonce}">reset link</a>`;
 
       console.log(resetLink);
