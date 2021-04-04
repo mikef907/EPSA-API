@@ -1,4 +1,3 @@
-import { isMagnetURI } from 'class-validator';
 import { decode } from 'jsonwebtoken';
 import { Arg, Authorized, Ctx, Mutation, Query, Resolver } from 'type-graphql';
 import { Post, PostInput, PostQuery } from '../../classes/post';

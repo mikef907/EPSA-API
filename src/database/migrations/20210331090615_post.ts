@@ -8,7 +8,7 @@ export async function up(knex: Knex): Promise<void> {
     table.dateTime('published');
     table.string('headline');
     table.string('imgUrl');
-    table.string('content');
+    table.text('content');
   });
 }
 

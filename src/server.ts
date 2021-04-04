@@ -73,11 +73,11 @@ async function main() {
     uploads: false,
   });
 
-  app.use(graphqlUploadExpress({ maxFiles: 10 }));
+  app.use(graphqlUploadExpress({ maxFiles: 1 }));
 
   app.use('/images', express.static(path.join(__dirname, '/../../images')));
 
-  server.applyMiddleware({ app });
+  server.applyMiddleware({ app, bodyParserConfig: { limit: '10mb' } });
 
   console.log('live', IsLive);
 
