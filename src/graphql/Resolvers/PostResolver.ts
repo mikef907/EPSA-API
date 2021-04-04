@@ -5,44 +5,40 @@ import { Post, PostInput, PostQuery } from '../../classes/post';
 import { Context } from '../../context';
 import { knex } from '../../database/connection';
 
+const fields = [
+  'posts.*',
+  'users.first_name',
+  'users.last_name',
+  'users.email',
+  'staff.img',
+  'staff.start',
+  'staff.description',
+];
+
 @Resolver((_of) => Post)
 export class PostResolver {
   @Query((_returns) => [PostQuery])
   async allPosts() {
     var posts = await knex('posts')
-      .select([
-        '*',
-        'users.first_name',
-        'users.last_name',
-        'users.email',
-        'staff.img',
-        'staff.start',
-        'staff.description',
-      ])
+      .select(fields)
       .join('staff', 'posts.authorId', '=', 'staff.id')
       .join('users', 'users.id', '=', 'staff.userId')
       .from('posts');
 
-    console.log('posts', posts);
-
-    return posts.map((p) => {
-      p.author = {
-        user: {
-          first_name: p.first_name,
-          last_name: p.last_name,
-          email: p.email,
-        },
-        img: p.img,
-        description: p.description,
-        start: p.start,
-      };
-      return p;
-    });
+    return posts.map((p) => this.mapPost(p));
   }
 
   @Query((_returns) => PostQuery)
   async post(@Arg('id') id: number) {
-    return await knex('posts').where({ id }).first();
+    const post = await knex('posts')
+      .select(fields)
+      .join('staff', 'posts.authorId', '=', 'staff.id')
+      .join('users', 'users.id', '=', 'staff.userId')
+      .from('posts')
+      .where('posts.id', id)
+      .first();
+
+    return this.mapPost(post);
   }
 
   @Mutation((_returns) => Number)
@@ -74,5 +70,19 @@ export class PostResolver {
   async removePost(@Arg('id') id: number) {
     await knex('posts').where({ id }).delete();
     return true;
+  }
+
+  private mapPost(post: any) {
+    post.author = {
+      user: {
+        first_name: post.first_name,
+        last_name: post.last_name,
+        email: post.email,
+      },
+      img: post.img,
+      description: post.description,
+      start: post.start,
+    };
+    return post;
   }
 }
