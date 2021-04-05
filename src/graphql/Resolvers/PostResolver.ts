@@ -46,12 +46,12 @@ export class PostResolver {
     const token = ctx.req.headers.authorization?.split(' ')[1] as string;
     const decoded = decode(token) as any;
 
-    const staffId = await knex('staff')
+    const staff = await knex('staff')
       .select('id')
       .where({ userId: decoded.user.id })
       .first();
 
-    post.authorId = staffId;
+    post.authorId = staff.id;
 
     const result = await knex('posts').insert(post).returning('id');
     return result[0];
