@@ -30,7 +30,7 @@ jobs:
     - name: Setup SSH
       uses: MrSquaare/ssh-setup-action@v1
       with:
-        host: github.com
+        host: ${{ secrets.REMOTE_HOST }}
         private-key: ${{ secrets.SERVER_SSH_KEY }}
     - name: start server
       run: pm2 start server
