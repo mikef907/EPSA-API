@@ -36,9 +36,6 @@ jobs:
         user: ${{ secrets.REMOTE_USER }}
         key: ${{ secrets.SERVER_SSH_KEY }}
         connect_timeout: 10s
-        script: |
-          (rm -rf /home/github/test || true)
-          ls -la  
+        script: | 
           echo $WELCOME 
-          mkdir -p /home/github/test/test1 && 
-          mkdir -p /home/github/test/test2 &&
+          pm2 start server
