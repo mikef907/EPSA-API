@@ -16,9 +16,9 @@ jobs:
     - name: Install npm dependencies
       run: npm install
     - name: Building Typescript
-      uses: stepek/tsc-action@master
-    - name: Deploy to Server
       uses: alexthemaster/action-build-typescript@v1.2.1
+    - name: Deploy to Server
+      uses: easingthemes/ssh-deploy@v2.1.5
       env:
           SSH_PRIVATE_KEY: ${{ secrets.SERVER_SSH_KEY }}
           ARGS: "-rltgoDzvO --delete"
