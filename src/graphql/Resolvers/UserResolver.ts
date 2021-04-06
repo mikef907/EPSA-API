@@ -86,7 +86,7 @@ export class UserResolver {
   }
 
   @Query((_returns) => [UserQuery])
-  //@Authorized(['Staff', 'Admin'])
+  @Authorized(['Staff', 'Admin'])
   async users(@Args() { inRoles, notInRoles }: UsersArgs) {
     const users = await knex
       .select(...this.props, 'name as role', 'roleId')

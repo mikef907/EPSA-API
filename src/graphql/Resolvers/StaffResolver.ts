@@ -96,6 +96,7 @@ export class StaffResolver {
   }
 
   @Mutation((_returns) => Boolean)
+  @Authorized('Admin', 'Staff')
   async updateStaff(@Arg('staff') staff: StaffInput) {
     try {
       return await knex.transaction(async (trx) => {
