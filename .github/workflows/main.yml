@@ -30,7 +30,8 @@ jobs:
     - name: Setup SSH
       uses: MrSquaare/ssh-setup-action@v1
       with:
-        host: ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }}
+        user: ${{ secrets.REMOTE_USER }}
+        host: ${{ secrets.REMOTE_HOST }}
         private-key: ${{ secrets.SERVER_SSH_KEY }}
     - name: start server
       run: pm2 start server
