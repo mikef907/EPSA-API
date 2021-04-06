@@ -15,8 +15,12 @@ jobs:
         node-version: '14.x'
     - name: Install npm dependencies
       run: npm install
-    - name: tsc
-      uses: icrawl/action-tsc@v1
+    - name: Building Typescript
+      uses: FuLagann/tsc-build-push@v1
+      with:
+        user-name: "epsa"
+        user-email: "epsaak@gmail.com"
+        message: "Automatically built unbuilt typescript"
     - name: Deploy to Server
       uses: easingthemes/ssh-deploy@v2.1.5
       env:
