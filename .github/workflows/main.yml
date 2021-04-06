@@ -27,11 +27,18 @@ jobs:
           REMOTE_USER: ${{ secrets.REMOTE_USER }}
           TARGET: ${{ secrets.REMOTE_TARGET }}
           EXCLUDE: "/dist/, /node_modules/"
-    - name: Setup SSH
-      uses: MrSquaare/ssh-setup-action@v1
+    - name: ssh pipelines
+      uses: cross-the-world/ssh-pipeline@master
+      env:
+        WELCOME: "ssh pipeline"
       with:
-        user: ${{ secrets.REMOTE_USER }}
         host: ${{ secrets.REMOTE_HOST }}
-        private-key: ${{ secrets.SERVER_SSH_KEY }}
-    - name: start server
-      run: pm2 start server
+        user: ${{ secrets.REMOTE_USER }}
+        key: ${{ secrets.SERVER_SSH_KEY }}
+        connect_timeout: 10s
+        script: |
+          (rm -rf /home/github/test || true)
+          ls -la  
+          echo $WELCOME 
+          mkdir -p /home/github/test/test1 && 
+          mkdir -p /home/github/test/test2 &&
