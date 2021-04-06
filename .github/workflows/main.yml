@@ -15,8 +15,6 @@ jobs:
         node-version: '14.x'
     - name: Install npm dependencies
       run: npm install
-    - name: Building Typescript
-      uses: alexthemaster/action-build-typescript@v1.2.1
     - name: Deploy to Server
       uses: easingthemes/ssh-deploy@v2.1.5
       env:
@@ -30,11 +28,15 @@ jobs:
       env:
         WELCOME: "ssh pipeline"
         JWT: ${{ secrets.JWT_SIGNATURE }}
+        web: ${{ secrets.REMOTE_TARGET }}
       with:
         host: ${{ secrets.REMOTE_HOST }}
         user: ${{ secrets.REMOTE_USER }}
         key: ${{ secrets.SERVER_SSH_KEY }}
         connect_timeout: 10s
         script: | 
-          echo $WELCOME 
+          echo $WELCOME
+          cd $web
+          cp ../knexfile.ts src/database/knexfile.ts
+          tsc
           JWT_SIG=$JWT LIVE='1' pm2 restart server --update-env
