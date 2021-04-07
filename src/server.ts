@@ -75,7 +75,7 @@ async function main() {
 
   app.use(graphqlUploadExpress({ maxFiles: 1 }));
 
-  app.use('/images', express.static(path.join(__dirname, '/../../images')));
+  app.use('/images', express.static(path.join(__dirname, '/../../../images')));
 
   server.applyMiddleware({ app, bodyParserConfig: { limit: '10mb' } });
 

@@ -139,7 +139,7 @@ export class StaffResolver {
   }
 
   @Mutation(() => Boolean)
-  @Authorized()
+  @Authorized('Admin', 'Staff')
   async uploadAvatar(
     @Arg('file', (type) => GraphQLUpload) file: FileUpload,
     @Arg('userId') userId: number
@@ -148,7 +148,9 @@ export class StaffResolver {
       file
         .createReadStream()
         .pipe(
-          createWriteStream(__dirname + `/../../../../images/${file.filename}`)
+          createWriteStream(
+            __dirname + `/../../../../../images/${file.filename}`
+          )
         )
         .on('finish', async () => {
           await knex<Staff>('staff')
