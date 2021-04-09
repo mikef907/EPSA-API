@@ -1,5 +1,6 @@
 'use strict';
 import nodemailer from 'nodemailer';
+import { GmailAppPW } from './config';
 
 // async..await is not allowed in global scope, must use a wrapper
 const sendEmail = async (to: string, msg: string, subject: string) => {
@@ -9,18 +10,15 @@ const sendEmail = async (to: string, msg: string, subject: string) => {
 
   // create reusable transporter object using the default SMTP transport
   let transporter = nodemailer.createTransport({
-    host: 'smtp.ethereal.email',
-    port: 587,
-    secure: false, // true for 465, false for other ports
+    service: 'gmail',
     auth: {
-      user: testAccount.user, // generated ethereal user
-      pass: testAccount.pass, // generated ethereal password
+      user: 'admin@epsaak.org', // generated ethereal user
+      pass: GmailAppPW, // generated ethereal password
     },
   });
 
   // send mail with defined transport object
   let info = await transporter.sendMail({
-    from: '"Fred Foo 👻" <foo@example.com>', // sender address
     to, // list of receivers
     subject, // Subject line
     html: msg,

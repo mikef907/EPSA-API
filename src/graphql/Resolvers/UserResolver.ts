@@ -19,7 +19,7 @@ import {
 } from '../../classes/user';
 import { knex } from '../../database/connection';
 import argon2 from 'argon2';
-import { JwtSignature } from '../../config';
+import { AppRoot, JwtSignature } from '../../config';
 import { sign } from 'jsonwebtoken';
 import { Nonce } from '../../classes/nonce';
 import dayjs from 'dayjs';
@@ -74,11 +74,11 @@ export class UserResolver {
           expiry: dayjs().add(1, 'day').toDate(),
         });
 
-      const resetLink = `<a href="http://localhost:3000/reset-password/${nonce[0].nonce}">reset link</a>`;
+      const resetLink = `<a href="${AppRoot}reset-password/${nonce[0].nonce}">reset link</a>`;
 
       console.log(resetLink);
 
-      // await sendEmail(user.email, resetLink, 'Password Reset Link');
+      await sendEmail(user.email, resetLink, 'Password Reset Link');
 
       return true;
     }
