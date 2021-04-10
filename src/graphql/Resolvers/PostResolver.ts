@@ -20,7 +20,7 @@ export class PostResolver {
   async allPosts() {
     var posts = await knex('posts')
       .select(fields)
-      .join('staff', 'posts.authorId', '=', 'staff.id')
+      .join('staff', 'posts.authorId', '=', 'staff.userId')
       .join('users', 'users.id', '=', 'staff.userId')
       .from('posts');
 
@@ -31,7 +31,7 @@ export class PostResolver {
   async post(@Arg('id') id: number) {
     const post = await knex('posts')
       .select(fields)
-      .join('staff', 'posts.authorId', '=', 'staff.id')
+      .join('staff', 'posts.authorId', '=', 'staff.userId')
       .join('users', 'users.id', '=', 'staff.userId')
       .from('posts')
       .where('posts.id', id)
@@ -47,11 +47,11 @@ export class PostResolver {
     const decoded = decode(token) as any;
 
     const staff = await knex('staff')
-      .select('id')
+      .select('userId')
       .where({ userId: decoded.user.id })
       .first();
 
-    post.authorId = staff.id;
+    post.authorId = staff.userId;
 
     const result = await knex('posts').insert(post).returning('id');
     return result[0];
