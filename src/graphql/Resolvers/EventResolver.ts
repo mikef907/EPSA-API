@@ -1,13 +1,22 @@
 import dayjs from 'dayjs';
-import { Arg, Mutation, Query, Resolver } from 'type-graphql';
-import { Event, EventInput, EventQuery } from '../../classes/event';
+import { Arg, Args, Mutation, Query, Resolver } from 'type-graphql';
+import {
+  Event,
+  EventInput,
+  EventQuery,
+  GetEventsArgs,
+} from '../../classes/event';
 import { knex } from '../../database/connection';
 
 @Resolver((_of) => Event)
 export class EventResolver {
   @Query((_returns) => [EventQuery])
-  async events() {
-    return await knex<Event>('events').select<Event>('*');
+  async events(@Args() { take }: GetEventsArgs) {
+    let q = knex<Event>('events').select<Event>('*').orderBy('start', 'desc');
+
+    if (take) q = q.limit(take);
+
+    return await q;
   }
 
   @Mutation((_of) => EventQuery)

@@ -257,7 +257,7 @@ export class UserResolver {
     };
 
     return sign(token, JwtSignature, {
-      issuer: 'pipa',
+      issuer: 'epsa',
       audience: 'api',
     });
   }

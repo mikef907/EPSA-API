@@ -1,4 +1,4 @@
-import { Field, ID, InputType, ObjectType } from 'type-graphql';
+import { ArgsType, Field, ID, InputType, Int, ObjectType } from 'type-graphql';
 
 export class Event {
   id!: number;
@@ -50,4 +50,10 @@ export class EventInput implements Partial<Event> {
   start!: Date;
   @Field({ nullable: true })
   end?: Date;
+}
+
+@ArgsType()
+export class GetEventsArgs {
+  @Field((type) => Int, { nullable: true })
+  take?: number;
 }

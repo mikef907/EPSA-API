@@ -1,4 +1,4 @@
-import { Field, ID, InputType, ObjectType } from 'type-graphql';
+import { ArgsType, Field, ID, InputType, Int, ObjectType } from 'type-graphql';
 import { Staff, StaffQuery } from './staff';
 
 export class Post {
@@ -49,4 +49,12 @@ export class PostInput implements Partial<Post> {
   imgUrl?: string;
   @Field()
   content!: string;
+}
+
+@ArgsType()
+export class GetPostsArgs {
+  @Field((type) => Int, { nullable: true })
+  take?: number;
+  @Field({ nullable: true })
+  isPublished?: boolean;
 }

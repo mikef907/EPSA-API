@@ -27,7 +27,7 @@ export const customAuthChecker: AuthChecker<Context> = (
   if (authHeader) {
     const token = authHeader.split(' ')[1];
 
-    if (verify(token, JwtSignature, { issuer: 'pipa', audience: 'api' })) {
+    if (verify(token, JwtSignature, { issuer: 'epsa', audience: 'api' })) {
       const decoded = decode(token) as any;
 
       if (

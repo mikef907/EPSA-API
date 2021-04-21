@@ -4,7 +4,7 @@ import argon2 from 'argon2';
 import { Role } from '../../classes/role';
 import { Event } from '../../classes/event';
 import { Staff } from '../../classes/staff';
-import dayjs from 'dayjs';
+import dayjs, { Dayjs } from 'dayjs';
 import { Post } from '../../classes/post';
 
 export async function seed(knex: Knex): Promise<void> {
@@ -87,13 +87,13 @@ export async function seed(knex: Knex): Promise<void> {
     {
       name: 'Test',
       description: 'Testing',
-      start: new Date(),
+      start: dayjs().subtract(1, 'day').toDate(),
     },
     {
       name: 'Test2',
       description: 'Testing2',
-      start: new Date(),
-      end: new Date(),
+      start: dayjs().add(1, 'day').toDate(),
+      end: dayjs().add(1, 'day').add(2, 'hour').toDate(),
     },
     {
       name: 'Test3',
@@ -106,8 +106,24 @@ export async function seed(knex: Knex): Promise<void> {
   await knex<Post>('posts').insert([
     {
       headline: 'Welcome to EPSA!',
-      authorId: users[0].id,
+      authorId: users[1].id,
       published: new Date(),
+      content: '<p>We are coming soon!</p>',
+    },
+    {
+      headline: 'We are coming soon!',
+      authorId: users[1].id,
+      published: new Date(),
+      content: '<p>We are coming soon!</p>',
+    },
+    {
+      headline: 'This is not published',
+      authorId: users[1].id,
+      content: '<p>We are coming soon!</p>',
+    },
+    {
+      headline: 'This is also not published',
+      authorId: users[1].id,
       content: '<p>We are coming soon!</p>',
     },
   ]);

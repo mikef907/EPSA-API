@@ -1,6 +1,15 @@
+import dayjs from 'dayjs';
 import { decode } from 'jsonwebtoken';
-import { Arg, Authorized, Ctx, Mutation, Query, Resolver } from 'type-graphql';
-import { Post, PostInput, PostQuery } from '../../classes/post';
+import {
+  Arg,
+  Args,
+  Authorized,
+  Ctx,
+  Mutation,
+  Query,
+  Resolver,
+} from 'type-graphql';
+import { GetPostsArgs, Post, PostInput, PostQuery } from '../../classes/post';
 import { Context } from '../../context';
 import { knex } from '../../database/connection';
 
@@ -17,12 +26,20 @@ const fields = [
 @Resolver((_of) => Post)
 export class PostResolver {
   @Query((_returns) => [PostQuery])
-  async allPosts() {
-    var posts = await knex('posts')
+  async allPosts(@Args() { take, isPublished }: GetPostsArgs) {
+    let q = knex('posts')
       .select(fields)
       .join('staff', 'posts.authorId', '=', 'staff.userId')
       .join('users', 'users.id', '=', 'staff.userId')
-      .from('posts');
+      .from('posts')
+      .orderBy('posts.published', 'desc');
+
+    if (isPublished === true) q = q.where('posts.published', '<=', new Date());
+    else if (isPublished === false) q = q.where('posts.published', 'is', null);
+
+    if (take) q = q.limit(take);
+
+    const posts = await q;
 
     return posts.map((p) => this.mapPost(p));
   }
@@ -31,8 +48,8 @@ export class PostResolver {
   async post(@Arg('id') id: number) {
     const post = await knex('posts')
       .select(fields)
-      .join('staff', 'posts.authorId', '=', 'staff.userId')
-      .join('users', 'users.id', '=', 'staff.userId')
+      .join('staff', 'staff.userId', '=', 'posts.authorId')
+      .join('users', 'users.id', '=', 'posts.authorId')
       .from('posts')
       .where('posts.id', id)
       .first();
