@@ -8,6 +8,8 @@ export class Event {
   allDay!: boolean;
   start!: Date;
   end?: Date | null;
+  zipCode!: number;
+  language!: string;
   created_at!: Date;
   updated_at!: Date;
 }
@@ -28,6 +30,10 @@ export class EventQuery implements Partial<Event> {
   start!: Date;
   @Field({ nullable: true })
   end?: Date;
+  @Field()
+  zipCode!: number;
+  @Field()
+  language!: string;
   @Field()
   created_at!: Date;
   @Field()
@@ -50,6 +56,10 @@ export class EventInput implements Partial<Event> {
   start!: Date;
   @Field({ nullable: true })
   end?: Date;
+  @Field()
+  zipCode!: number;
+  @Field()
+  language!: string;
 }
 
 @ArgsType()

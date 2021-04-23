@@ -118,8 +118,9 @@ export class StaffResolver {
 
         return true;
       });
-    } catch {
-      return false;
+    } catch (error) {
+      console.log(error);
+      throw error;
     }
   }
 

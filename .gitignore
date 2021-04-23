@@ -4,3 +4,4 @@ node_modules
 src/database/knexfile.ts
 knexfile.ts
 images/*
+src/database/seed/users.ts

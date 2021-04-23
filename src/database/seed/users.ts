@@ -9,11 +9,13 @@ import { Post } from '../../classes/post';
 
 export async function seed(knex: Knex): Promise<void> {
   // Deletes ALL existing entries
+  await knex('user_role').del();
+
+  await knex('staff').del();
+
   await knex('users').del();
 
   await knex('roles').del();
-
-  await knex('user_role').del();
 
   const roles = await knex<Role>('roles')
     .insert([
@@ -87,17 +89,23 @@ export async function seed(knex: Knex): Promise<void> {
     {
       name: 'Test',
       description: 'Testing',
+      language: 'EN',
+      zipCode: 99503,
       start: dayjs().subtract(1, 'day').toDate(),
     },
     {
       name: 'Test2',
       description: 'Testing2',
+      language: 'EN',
+      zipCode: 99503,
       start: dayjs().add(1, 'day').toDate(),
       end: dayjs().add(1, 'day').add(2, 'hour').toDate(),
     },
     {
       name: 'Test3',
       description: 'Testing3',
+      language: 'EN',
+      zipCode: 99503,
       start: new Date(),
       allDay: true,
     },
