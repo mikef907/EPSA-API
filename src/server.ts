@@ -14,6 +14,7 @@ import path from 'path';
 import https from 'https';
 import fs from 'fs';
 import { PostResolver } from './graphql/Resolvers/PostResolver';
+import { GroupResolver } from './graphql/Resolvers/GroupResolver';
 
 export const customAuthChecker: AuthChecker<Context> = (
   { root, args, context, info },
@@ -49,7 +50,13 @@ async function main() {
   console.log('Starting Server...');
   // Construct a schema, using GraphQL schema language
   var schema = await buildSchema({
-    resolvers: [UserResolver, EventResolver, StaffResolver, PostResolver],
+    resolvers: [
+      UserResolver,
+      EventResolver,
+      StaffResolver,
+      PostResolver,
+      GroupResolver,
+    ],
     authChecker: customAuthChecker,
   });
 

@@ -6,6 +6,7 @@ import { Event } from '../../classes/event';
 import { Staff } from '../../classes/staff';
 import dayjs, { Dayjs } from 'dayjs';
 import { Post } from '../../classes/post';
+import { Group } from '../../classes/group';
 
 export async function seed(knex: Knex): Promise<void> {
   // Deletes ALL existing entries
@@ -49,7 +50,19 @@ export async function seed(knex: Knex): Promise<void> {
       {
         first_name: 'Bob',
         last_name: 'Vance',
-        email: 'bob@gmail.com',
+        email: 'bob@epsa.com',
+        password: await argon2.hash('password'),
+      },
+      {
+        first_name: 'Jim',
+        last_name: 'Halpert',
+        email: 'jim@epsa.com',
+        password: await argon2.hash('password'),
+      },
+      {
+        first_name: 'Pam',
+        last_name: 'Halpert',
+        email: 'pam@epsa.com',
         password: await argon2.hash('password'),
       },
     ])
@@ -133,6 +146,32 @@ export async function seed(knex: Knex): Promise<void> {
       headline: 'This is also not published',
       authorId: users[1].id,
       content: '<p>We are coming soon!</p>',
+    },
+  ]);
+
+  await knex<Group>('groups').insert([
+    {
+      facilitatorId: users[1].id,
+      language: 'en',
+      zipCode: 99999,
+      city: 'Anchorage',
+    },
+    {
+      facilitatorId: users[1].id,
+      language: 'es',
+      zipCode: 99998,
+      city: 'Anchorage',
+    },
+  ]);
+
+  await knex('user_group').insert([
+    {
+      userId: users[3].id,
+      groupId: 1,
+    },
+    {
+      userId: users[4].id,
+      groupId: 1,
     },
   ]);
 }
