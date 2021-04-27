@@ -1,4 +1,4 @@
-import * as Knex from 'knex';
+import { Knex } from 'knex';
 import { User } from '../../classes/user';
 import argon2 from 'argon2';
 import { Role } from '../../classes/role';
