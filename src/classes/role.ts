@@ -1,16 +1,14 @@
-import { Field, ID, ObjectType } from 'type-graphql';
+import { Field, ID, InterfaceType, ObjectType } from 'type-graphql';
 
-export class Role {
+@InterfaceType()
+export abstract class IRole {
+  @Field((_type) => ID)
   id!: number;
+  @Field()
   name!: string;
   created_at?: Date;
   updated_at?: Date;
 }
 
-@ObjectType()
-export class RoleQuery implements Partial<Role> {
-  @Field((_type) => ID)
-  id!: number;
-  @Field()
-  name!: string;
-}
+@ObjectType({ implements: IRole })
+export class RoleQuery {}

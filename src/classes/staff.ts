@@ -1,56 +1,67 @@
-import { Authorized, Field, ID, InputType, ObjectType } from 'type-graphql';
-import { User, UserInput, UserQuery } from './user';
+import {
+  Authorized,
+  Field,
+  ID,
+  InputType,
+  InterfaceType,
+  ObjectType,
+} from 'type-graphql';
+import { IUser, IUserInput, UserInput, UserQuery } from './user';
 
-export class Staff {
-  id!: number;
-  userId!: number;
-  description?: string;
-  start?: Date;
-  img?: string;
-  created_at?: Date;
-  updated_at?: Date;
-  user?: User;
-}
-
-@ObjectType()
-export class StaffQuery implements Partial<Staff> {
+@InterfaceType()
+export abstract class IStaffInput {
   @Field((_type) => ID)
   id!: number;
   @Field()
   userId!: number;
-  @Field()
-  start!: Date;
+  @Field({ nullable: true })
+  start?: Date;
   @Field({ nullable: true })
   description?: string;
+  @Field((_type) => IUserInput)
+  user!: IUser;
+}
+
+@InterfaceType({ implements: IStaffInput })
+export abstract class IStaff extends IStaffInput {
   @Field({ nullable: true })
   img?: string;
   @Field((_type) => UserQuery)
-  user!: User;
+  user!: IUser;
+  @Field()
+  created_at?: Date;
+  @Field()
+  updated_at?: Date;
 }
 
-@InputType()
-export class NewStaffInput implements Partial<Staff> {
-  @Field()
-  userId!: number;
-  @Field()
-  start!: Date;
-  @Field({ nullable: true })
-  description?: string;
-  @Field((_type) => UserInput)
-  user!: User;
-}
+@ObjectType({ implements: [IStaff, IStaffInput] })
+export class StaffQuery {}
 
 @InputType()
-export class StaffInput implements Partial<Staff> {
-  @Field((_type) => ID)
+export class StaffInput extends IStaffInput {
+  @Field((_type) => ID, { nullable: true })
   id!: number;
   @Field()
   userId!: number;
-  @Authorized(['Admin'])
   @Field({ nullable: true })
   start?: Date;
   @Field({ nullable: true })
   description?: string;
   @Field((_type) => UserInput)
-  user!: User;
+  user!: IUser;
+}
+
+@InputType()
+export class StaffUpdate extends IStaffInput {
+  @Authorized(['Admin'])
+  @Field({ nullable: true })
+  start?: Date;
+  @Field((_type) => ID)
+  id!: number;
+  @Field()
+  userId!: number;
+  @Field({ nullable: true })
+  description?: string;
+  @Field((_type) => UserInput)
+  user!: IUser;
 }

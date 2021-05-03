@@ -3,20 +3,33 @@ import {
   Field,
   ID,
   InputType,
-  Authorized,
   ArgsType,
+  InterfaceType,
 } from 'type-graphql';
-import { Role, RoleQuery } from './role';
+import { INonce } from './nonce';
+import { IRole, RoleQuery } from './role';
 
-export class User {
-  id!: number;
+@InterfaceType()
+export abstract class IUserInput {
+  @Field()
   first_name!: string;
+  @Field()
   last_name!: string;
+  @Field()
   email!: string;
   password?: string;
+}
+
+@InterfaceType({ implements: IUserInput })
+export abstract class IUser extends IUserInput {
+  @Field((_type) => ID)
+  id!: number;
+  @Field((_type) => [RoleQuery])
+  roles!: IRole[];
+  @Field()
   created_at?: Date;
+  @Field()
   updated_at?: Date;
-  roles!: Role[];
 }
 
 @ArgsType()
@@ -28,53 +41,35 @@ export class UsersArgs {
 }
 
 @ArgsType()
-export class UserLogin implements Partial<User> {
+export class UserLogin implements Partial<UserInput> {
   @Field()
   email!: string;
   @Field()
   password!: string;
 }
 
-@ObjectType()
-export class UserQuery implements Partial<User> {
-  @Field((_type) => ID)
-  id!: number;
+@ObjectType({ implements: [IUser, IUserInput] })
+export class UserQuery {}
+
+@InputType()
+export class UserInput extends IUserInput {
   @Field()
   first_name!: string;
   @Field()
   last_name!: string;
   @Field()
   email!: string;
-  @Field((_type) => [RoleQuery])
-  roles!: Role[];
-}
-
-@InputType()
-export class UserInput implements Partial<User> {
-  @Field({ nullable: true })
-  first_name?: string;
-  @Field({ nullable: true })
-  last_name?: string;
-  @Field({ nullable: true })
-  email?: string;
-  @Field({ nullable: true })
   password?: string;
 }
 
 @InputType()
-export class NewUserInput implements Partial<User> {
-  @Field()
-  first_name!: string;
-  @Field()
-  last_name!: string;
-  @Field()
-  email!: string;
+export class NewUserInput extends UserInput {
   @Field()
   password!: string;
 }
 
 @InputType()
-export class UserResetPassword {
+export class UserResetPassword implements Partial<IUser>, Partial<INonce> {
   @Field()
   nonce!: string;
   @Field()

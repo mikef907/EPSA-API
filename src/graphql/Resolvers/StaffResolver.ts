@@ -2,16 +2,16 @@ import { FileUpload, GraphQLUpload } from 'graphql-upload';
 import { createWriteStream } from 'fs';
 import { Arg, Authorized, Mutation, Query, Resolver } from 'type-graphql';
 import {
-  NewStaffInput,
-  Staff,
-  StaffInput,
+  IStaff,
+  StaffUpdate,
   StaffQuery,
+  StaffInput,
 } from '../../classes/staff';
-import { User } from '../../classes/user';
+import { IUser } from '../../classes/user';
 import { knex } from '../../database/connection';
-import { Role } from '../../classes/role';
+import { IRole } from '../../classes/role';
 
-@Resolver((_of) => Staff)
+@Resolver((_of) => IStaff)
 export class StaffResolver {
   @Query((_returns) => [StaffQuery])
   async allStaff() {
@@ -21,7 +21,7 @@ export class StaffResolver {
       .from('staff')
       .then(async (results) => {
         return results.map((result) => {
-          const staff: Staff = {
+          const staff: IStaff = {
             id: result.id,
             userId: result.userId,
             start: result.start,
@@ -49,7 +49,7 @@ export class StaffResolver {
       .from('staff')
       .first()
       .then(async (result) => {
-        const staff: Staff = {
+        const staff: IStaff = {
           id: result.id,
           userId: result.userId,
           start: result.start,
@@ -69,11 +69,11 @@ export class StaffResolver {
 
   @Mutation((_returns) => Number)
   @Authorized('Admin')
-  async addStaff(@Arg('staff') staff: NewStaffInput) {
+  async addStaff(@Arg('staff') staff: StaffInput) {
     try {
       return await knex.transaction(async (trx) => {
-        const _user: Partial<User> = Object.assign({}, staff.user);
-        const _staff: Partial<Staff> = Object.assign({}, staff);
+        const _user: Partial<IUser> = Object.assign({}, staff.user);
+        const _staff: Partial<IStaff> = Object.assign({}, staff);
 
         delete _staff.user;
         delete _staff.id;
@@ -97,11 +97,11 @@ export class StaffResolver {
 
   @Mutation((_returns) => Boolean)
   @Authorized('Admin', 'Staff')
-  async updateStaff(@Arg('staff') staff: StaffInput) {
+  async updateStaff(@Arg('staff') staff: StaffUpdate) {
     try {
       return await knex.transaction(async (trx) => {
-        const _user: Partial<User> = Object.assign({}, staff.user);
-        const _staff: Partial<Staff> = Object.assign({}, staff);
+        const _user: Partial<IUser> = Object.assign({}, staff.user);
+        const _staff: Partial<IStaff> = Object.assign({}, staff);
 
         delete _staff.user;
         delete _staff.id;
@@ -129,7 +129,7 @@ export class StaffResolver {
   async removeStaff(@Arg('id') id: number) {
     try {
       return knex.transaction(async (trx) => {
-        await trx<Staff>('staff').where({ userId: id }).delete();
+        await trx<IStaff>('staff').where({ userId: id }).delete();
         const role = await this.getStaffRole();
         await trx('user_role').where({ userId: id, roleId: role.id }).delete();
         return true;
@@ -154,7 +154,7 @@ export class StaffResolver {
           )
         )
         .on('finish', async () => {
-          await knex<Staff>('staff')
+          await knex<IStaff>('staff')
             .update({ img: file.filename })
             .where({ userId });
           return resolve(true);
@@ -165,8 +165,8 @@ export class StaffResolver {
 
   private getStaffRole = async () =>
     (await knex
-      .select<Role>('*')
+      .select<IRole>('*')
       .where({ name: 'Staff' })
       .from('roles')
-      .first()) as Role;
+      .first()) as IRole;
 }

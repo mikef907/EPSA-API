@@ -1,12 +1,12 @@
 import { Knex } from 'knex';
-import { User } from '../../classes/user';
+import { IUser } from '../../classes/user';
 import argon2 from 'argon2';
-import { Role } from '../../classes/role';
-import { Event } from '../../classes/event';
-import { Staff } from '../../classes/staff';
+import { IRole } from '../../classes/role';
+import { IEvent } from '../../classes/event';
+import { IStaff } from '../../classes/staff';
 import dayjs, { Dayjs } from 'dayjs';
-import { Post } from '../../classes/post';
-import { Group } from '../../classes/group';
+import { IPost } from '../../classes/post';
+import { IGroup } from '../../classes/group';
 
 export async function seed(knex: Knex): Promise<void> {
   // Deletes ALL existing entries
@@ -18,7 +18,7 @@ export async function seed(knex: Knex): Promise<void> {
 
   await knex('roles').del();
 
-  const roles = await knex<Role>('roles')
+  const roles = await knex<IRole>('roles')
     .insert([
       {
         name: 'User',
@@ -33,7 +33,7 @@ export async function seed(knex: Knex): Promise<void> {
     .returning('*');
 
   // Inserts seed entries
-  const users = await knex<User>('users')
+  const users = await knex<IUser>('users')
     .insert([
       {
         first_name: 'Michael',
@@ -91,14 +91,14 @@ export async function seed(knex: Knex): Promise<void> {
     },
   ]);
 
-  await knex<Staff>('staff').insert([
+  await knex<IStaff>('staff').insert([
     {
       userId: users[1].id,
       start: dayjs('1-1-2021').toDate(),
     },
   ]);
 
-  await knex<Event>('events').insert([
+  await knex<IEvent>('events').insert([
     {
       name: 'Test',
       description: 'Testing',
@@ -124,7 +124,7 @@ export async function seed(knex: Knex): Promise<void> {
     },
   ]);
 
-  await knex<Post>('posts').insert([
+  await knex<IPost>('posts').insert([
     {
       headline: 'Welcome to EPSA!',
       authorId: users[1].id,
@@ -149,18 +149,26 @@ export async function seed(knex: Knex): Promise<void> {
     },
   ]);
 
-  await knex<Group>('groups').insert([
+  await knex<IGroup>('groups').insert([
     {
       facilitatorId: users[1].id,
       language: 'en',
       zipCode: 99999,
       city: 'Anchorage',
+      limit: 5,
+      start: new Date(),
+      end: dayjs(new Date()).add(1, 'month').toDate(),
+      title: 'Test 1',
     },
     {
       facilitatorId: users[1].id,
       language: 'es',
       zipCode: 99998,
       city: 'Anchorage',
+      limit: 5,
+      start: new Date(),
+      end: dayjs(new Date()).add(1, 'month').toDate(),
+      title: 'Test 2',
     },
   ]);
 

@@ -9,8 +9,8 @@ import {
   Resolver,
 } from 'type-graphql';
 import {
+  IUser,
   NewUserInput,
-  User,
   UserInput,
   UserLogin,
   UserQuery,
@@ -21,21 +21,21 @@ import { knex } from '../../database/connection';
 import argon2 from 'argon2';
 import { AppRoot, JwtSignature } from '../../config';
 import { sign } from 'jsonwebtoken';
-import { Nonce } from '../../classes/nonce';
+import { INonce } from '../../classes/nonce';
 import dayjs from 'dayjs';
 import { v4 } from 'uuid';
 import sendEmail from '../../sendEmail';
 import { AuthenticationError, UserInputError } from 'apollo-server-express';
-import { Role } from '../../classes/role';
-import { Staff } from '../../classes/staff';
+import { IRole } from '../../classes/role';
+import { IStaff } from '../../classes/staff';
 
-@Resolver((_of) => User)
+@Resolver((_of) => IUser)
 export class UserResolver {
   private readonly props = ['users.id', 'first_name', 'last_name', 'email'];
 
   @Mutation((_returns) => Boolean)
   async resetPassword(@Arg('input') input: UserResetPassword) {
-    var nonce = await knex<Nonce>('nonces')
+    var nonce = await knex<INonce>('nonces')
       .where({ nonce: input.nonce, used: false })
       .first();
 
@@ -43,11 +43,11 @@ export class UserResolver {
       if (dayjs(nonce.expiry).isAfter(dayjs())) {
         var password = await argon2.hash(input.password);
 
-        await knex<User>('users')
+        await knex<IUser>('users')
           .update({ password })
           .where({ id: nonce.userId });
 
-        await knex<Nonce>('nonces')
+        await knex<INonce>('nonces')
           .update({ used: true })
           .where({ nonce: nonce.nonce, userId: nonce.userId });
 
@@ -60,15 +60,15 @@ export class UserResolver {
 
   @Mutation((_returns) => Boolean)
   async forgotPassword(@Arg('email') email: string) {
-    var user = await knex<User>('users')
-      .select<User>(this.props)
+    var user = await knex<IUser>('users')
+      .select<IUser>(this.props)
       .where({ email })
       .first();
 
     if (user) {
-      var nonce = await knex<Nonce>('nonces')
+      var nonce = await knex<INonce>('nonces')
         .returning(['nonce'])
-        .insert<Nonce[]>({
+        .insert<INonce[]>({
           nonce: v4(),
           userId: user.id,
           expiry: dayjs().add(1, 'day').toDate(),
@@ -95,7 +95,7 @@ export class UserResolver {
       .join('roles', 'user_role.roleId', '=', 'roles.id');
 
     return users
-      .reduce((p: User[], c) => {
+      .reduce((p: IUser[], c) => {
         const idx = p.findIndex((_) => _.id === c.id);
         if (idx > -1) {
           p[idx].roles.push({ id: c.roleId, name: c.role });
@@ -132,7 +132,7 @@ export class UserResolver {
   @Query((_returns) => UserQuery)
   async user(@Arg('id') id: number) {
     return await knex
-      .select<User>(this.props)
+      .select<IUser>(this.props)
       .where({ id })
       .from('users')
       .first()
@@ -150,13 +150,13 @@ export class UserResolver {
     newUser.password = await argon2.hash(newUser.password);
 
     try {
-      return await knex<User>('users')
-        .insert<User>(newUser)
+      return await knex<IUser>('users')
+        .insert<IUser>(newUser)
         .returning('*')
         .then(async (_) => {
           const user = _[0];
 
-          var userRole = await knex<Role>('roles')
+          var userRole = await knex<IRole>('roles')
             .where({ name: 'User' })
             .first();
 
@@ -182,13 +182,13 @@ export class UserResolver {
     if (user.password) user.password = await argon2.hash(user.password);
 
     try {
-      return await knex<User>('users')
-        .insert<User>(user)
+      return await knex<IUser>('users')
+        .insert<IUser>(user)
         .returning('*')
         .then(async (_) => {
           const _user = _[0];
 
-          var userRole = await knex<Role>('roles')
+          var userRole = await knex<IRole>('roles')
             .where({ name: 'User' })
             .first();
 
@@ -211,7 +211,7 @@ export class UserResolver {
 
   @Mutation((_returns) => String)
   async login(@Args() login: UserLogin) {
-    return await knex<User>('users')
+    return await knex<IUser>('users')
       .where({ email: login.email })
       .first()
       .then(async (user) => {
@@ -244,7 +244,7 @@ export class UserResolver {
   }
 
   private async getToken(
-    user: User,
+    user: IUser,
     img: { value: string | null } | undefined | null = null
   ) {
     delete user.password;

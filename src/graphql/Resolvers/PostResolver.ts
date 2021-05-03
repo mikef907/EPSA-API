@@ -9,7 +9,7 @@ import {
   Query,
   Resolver,
 } from 'type-graphql';
-import { GetPostsArgs, Post, PostInput, PostQuery } from '../../classes/post';
+import { GetPostsArgs, IPost, PostInput, PostQuery } from '../../classes/post';
 import { Context } from '../../context';
 import { knex } from '../../database/connection';
 
@@ -23,7 +23,7 @@ const fields = [
   'staff.description',
 ];
 
-@Resolver((_of) => Post)
+@Resolver((_of) => IPost)
 export class PostResolver {
   @Query((_returns) => [PostQuery])
   async allPosts(@Args() { take, isPublished }: GetPostsArgs) {

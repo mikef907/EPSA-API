@@ -1,14 +1,14 @@
 import { Arg, Args, Authorized, Mutation, Query, Resolver } from 'type-graphql';
 import {
   GetGroupsArgs,
-  Group,
+  IGroup,
   GroupInput,
   GroupQuery,
 } from '../../classes/group';
-import { User } from '../../classes/user';
+import { IUser } from '../../classes/user';
 import { knex } from '../../database/connection';
 
-const baseQuery = knex<Group>('groups')
+const baseQuery = knex<IGroup>('groups')
   .select(
     'groups.*',
     'users.first_name',
@@ -20,7 +20,7 @@ const baseQuery = knex<Group>('groups')
   .join('users', 'users.id', '=', 'groups.facilitatorId')
   .join('staff', 'staff.userId', '=', 'users.id');
 
-@Resolver((_of) => Group)
+@Resolver((_of) => IGroup)
 export class GroupResolver {
   @Query((_returns) => [GroupQuery])
   async groups(@Args() { take, zipCode, language }: GetGroupsArgs) {
@@ -53,7 +53,7 @@ export class GroupResolver {
     if (withUsers) {
       return await q.then(async (group) => {
         if (group) {
-          group.users = await knex<User>('users')
+          group.users = await knex<IUser>('users')
             .select('id', 'first_name', 'last_name', 'email')
             .where('user_group.groupId', '=', group.id)
             .join('user_group', 'user_group.userId', '=', 'users.id');
@@ -67,7 +67,7 @@ export class GroupResolver {
   @Mutation((_returns) => GroupQuery)
   @Authorized('Staff', 'Admin')
   async createGroup(@Arg('group') groupInput: GroupInput) {
-    const result = await knex<Group>('groups')
+    const result = await knex<IGroup>('groups')
       .insert(groupInput)
       .returning('*');
     return result[0];
@@ -79,14 +79,14 @@ export class GroupResolver {
     @Arg('id') id: number,
     @Arg('group') groupInput: GroupInput
   ) {
-    await knex<Group>('groups').update(groupInput).where({ id });
+    await knex<IGroup>('groups').update(groupInput).where({ id });
     return true;
   }
 
   @Mutation((_returns) => Boolean)
   @Authorized('Staff', 'Admin')
   async deleteGroup(@Arg('id') id: number) {
-    await knex<Group>('groups').delete().where({ id });
+    await knex<IGroup>('groups').delete().where({ id });
   }
 
   private mapGroup(group: any) {

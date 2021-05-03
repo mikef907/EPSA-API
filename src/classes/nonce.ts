@@ -1,4 +1,4 @@
-export class Nonce {
+export abstract class INonce {
   nonce!: string;
   userId!: number;
   expiry!: Date;

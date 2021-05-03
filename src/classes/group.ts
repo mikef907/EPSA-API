@@ -5,48 +5,54 @@ import {
   ID,
   InputType,
   Int,
+  InterfaceType,
   ObjectType,
 } from 'type-graphql';
-import { Staff, StaffQuery } from './staff';
-import { User, UserQuery } from './user';
+import { IStaff, StaffQuery } from './staff';
+import { IUser, UserQuery } from './user';
 
-export class Group {
-  id!: number;
+@InterfaceType()
+export abstract class IGroupInput {
+  @Field()
   facilitatorId!: number;
-  facilitator?: Staff;
-  users?: User[];
+  @Field()
   city!: string;
+  @Field()
   zipCode!: number;
+  @Field()
   language!: string;
-  created_at!: Date;
-  updated_at!: Date;
+  @Field()
+  title!: string;
+  @Field({ nullable: true })
+  description?: string;
+  @Field()
+  start!: Date;
+  @Field()
+  end!: Date;
+  @Field((_type) => Int)
+  limit!: number;
 }
 
-@ObjectType()
-export class GroupQuery implements Partial<Group> {
+@InterfaceType({ implements: IGroupInput })
+export abstract class IGroup extends IGroupInput {
   @Field((_type) => ID)
   id!: number;
-  @Field()
-  facilitatorId!: number;
   @Field((_type) => StaffQuery, { nullable: true })
-  facilitator?: Staff;
+  facilitator?: IStaff;
   @Authorized(['Admin', 'Staff'])
   @Field((_type) => [UserQuery], { nullable: true })
-  users?: User[];
-  @Field()
-  city!: string;
-  @Field()
-  zipCode!: number;
-  @Field()
-  language!: string;
+  users?: IUser[];
   @Field()
   created_at!: Date;
   @Field()
   updated_at!: Date;
 }
 
+@ObjectType({ implements: [IGroup, IGroupInput] })
+export class GroupQuery {}
+
 @InputType()
-export class GroupInput implements Partial<Group> {
+export class GroupInput extends IGroupInput {
   @Field()
   facilitatorId!: number;
   @Field()
@@ -55,6 +61,16 @@ export class GroupInput implements Partial<Group> {
   zipCode!: number;
   @Field()
   language!: string;
+  @Field()
+  title!: string;
+  @Field({ nullable: true })
+  description?: string;
+  @Field()
+  start!: Date;
+  @Field()
+  end!: Date;
+  @Field((_type) => Int)
+  limit!: number;
 }
 
 @ArgsType()

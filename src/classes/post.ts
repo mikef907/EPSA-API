@@ -1,43 +1,46 @@
-import { ArgsType, Field, ID, InputType, Int, ObjectType } from 'type-graphql';
-import { Staff, StaffQuery } from './staff';
+import {
+  ArgsType,
+  Field,
+  ID,
+  InputType,
+  Int,
+  InterfaceType,
+  ObjectType,
+} from 'type-graphql';
+import { IStaff, StaffQuery } from './staff';
 
-export class Post {
-  id!: number;
-  authorId!: number;
-  author?: Staff;
+@InterfaceType()
+export abstract class IPostInput {
+  @Field((type) => ID, { nullable: true })
+  id?: number;
+  @Field({ nullable: true })
+  authorId?: number;
+  @Field({ nullable: true })
   published?: Date;
+  @Field()
   headline!: string;
+  @Field({ nullable: true })
   imgUrl?: string;
+  @Field()
   content!: string;
-  created_at!: Date;
-  updated_at!: Date;
 }
 
-@ObjectType()
-export class PostQuery implements Partial<Post> {
-  @Field((_type) => ID)
-  id!: number;
-  @Field()
-  authorId!: number;
+@InterfaceType({ implements: IPostInput })
+export abstract class IPost extends IPostInput {
   @Field((_type) => StaffQuery, { nullable: true })
-  author?: Staff;
-  @Field({ nullable: true })
-  published?: Date;
-  @Field()
-  headline!: string;
-  @Field({ nullable: true })
-  imgUrl?: string;
-  @Field()
-  content!: string;
+  author?: IStaff;
   @Field()
   created_at!: Date;
   @Field()
   updated_at!: Date;
 }
+
+@ObjectType({ implements: [IPost, IPostInput] })
+export class PostQuery {}
 
 @InputType()
-export class PostInput implements Partial<Post> {
-  @Field({ nullable: true })
+export class PostInput {
+  @Field((type) => ID, { nullable: true })
   id?: number;
   @Field({ nullable: true })
   authorId?: number;
