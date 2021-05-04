@@ -13,6 +13,8 @@ import { IUser, UserQuery } from './user';
 
 @InterfaceType()
 export abstract class IGroupInput {
+  @Field((_type) => ID)
+  id?: number;
   @Field()
   facilitatorId!: number;
   @Field()
@@ -35,8 +37,6 @@ export abstract class IGroupInput {
 
 @InterfaceType({ implements: IGroupInput })
 export abstract class IGroup extends IGroupInput {
-  @Field((_type) => ID)
-  id!: number;
   @Field((_type) => StaffQuery, { nullable: true })
   facilitator?: IStaff;
   @Authorized(['Admin', 'Staff'])
@@ -53,6 +53,8 @@ export class GroupQuery {}
 
 @InputType()
 export class GroupInput extends IGroupInput {
+  @Field((_type) => ID)
+  id?: number;
   @Field()
   facilitatorId!: number;
   @Field()

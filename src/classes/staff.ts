@@ -11,7 +11,7 @@ import { IUser, IUserInput, UserInput, UserQuery } from './user';
 @InterfaceType()
 export abstract class IStaffInput {
   @Field((_type) => ID)
-  id!: number;
+  id?: number;
   @Field()
   userId!: number;
   @Field({ nullable: true })
@@ -40,7 +40,7 @@ export class StaffQuery {}
 @InputType()
 export class StaffInput extends IStaffInput {
   @Field((_type) => ID, { nullable: true })
-  id!: number;
+  id?: number;
   @Field()
   userId!: number;
   @Field({ nullable: true })

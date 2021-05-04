@@ -11,7 +11,7 @@ import {
 @InterfaceType()
 export abstract class IEventInput {
   @Field((type) => ID)
-  id!: number;
+  id?: number;
   @Field({ nullable: true })
   parentId?: number;
   @Field()
@@ -44,7 +44,7 @@ export class EventQuery {}
 @InputType()
 export class EventInput extends IEventInput {
   @Field((type) => ID, { nullable: true })
-  id!: number;
+  id?: number;
   @Field({ nullable: true })
   parentId?: number;
   @Field()

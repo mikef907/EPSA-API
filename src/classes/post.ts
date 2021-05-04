@@ -11,7 +11,7 @@ import { IStaff, StaffQuery } from './staff';
 
 @InterfaceType()
 export abstract class IPostInput {
-  @Field((type) => ID, { nullable: true })
+  @Field((type) => ID)
   id?: number;
   @Field({ nullable: true })
   authorId?: number;
