@@ -19,7 +19,7 @@ export abstract class IGroupInput {
   facilitatorId!: number;
   @Field()
   city!: string;
-  @Field()
+  @Field((type) => Int)
   zipCode!: number;
   @Field()
   language!: string;
@@ -53,7 +53,7 @@ export class GroupQuery {}
 
 @InputType()
 export class GroupInput extends IGroupInput {
-  @Field((_type) => ID)
+  @Field((_type) => ID, { nullable: true })
   id?: number;
   @Field()
   facilitatorId!: number;

@@ -8,23 +8,24 @@ import {
 import { IUser } from '../../classes/user';
 import { knex } from '../../database/connection';
 
-const baseQuery = knex<IGroup>('groups')
-  .select(
-    'groups.*',
-    'users.first_name',
-    'users.last_name',
-    'users.email',
-    'staff.id as staffId',
-    'staff.img'
-  )
-  .join('users', 'users.id', '=', 'groups.facilitatorId')
-  .join('staff', 'staff.userId', '=', 'users.id');
+const baseQuery = () =>
+  knex<IGroup>('groups')
+    .select(
+      'groups.*',
+      'users.first_name',
+      'users.last_name',
+      'users.email',
+      'staff.id as staffId',
+      'staff.img'
+    )
+    .join('users', 'users.id', '=', 'groups.facilitatorId')
+    .join('staff', 'staff.userId', '=', 'users.id');
 
 @Resolver((_of) => IGroup)
 export class GroupResolver {
   @Query((_returns) => [GroupQuery])
   async groups(@Args() { take, zipCode, language }: GetGroupsArgs) {
-    let q = baseQuery;
+    let q = baseQuery();
 
     if (zipCode) q = q.where({ zipCode });
 
@@ -42,11 +43,10 @@ export class GroupResolver {
     @Arg('id') id: number,
     @Arg('withUsers') withUsers: boolean = false
   ) {
-    let q = baseQuery
+    let q = baseQuery()
       .where('groups.id', '=', id)
-      .first()
       .then((group) => {
-        if (group) return this.mapGroup(group);
+        if (group[0]) return this.mapGroup(group[0]);
         else throw new Error('Group not found');
       });
 
@@ -64,13 +64,13 @@ export class GroupResolver {
     } else return await q;
   }
 
-  @Mutation((_returns) => GroupQuery)
+  @Mutation((_returns) => Number)
   @Authorized('Staff', 'Admin')
   async createGroup(@Arg('group') groupInput: GroupInput) {
     const result = await knex<IGroup>('groups')
       .insert(groupInput)
       .returning('*');
-    return result[0];
+    return result[0].id;
   }
 
   @Mutation((_returns) => Boolean)
@@ -85,7 +85,7 @@ export class GroupResolver {
 
   @Mutation((_returns) => Boolean)
   @Authorized('Staff', 'Admin')
-  async deleteGroup(@Arg('id') id: number) {
+  async removeGroup(@Arg('id') id: number) {
     await knex<IGroup>('groups').delete().where({ id });
   }
 
