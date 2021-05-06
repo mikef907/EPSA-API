@@ -12,6 +12,12 @@ export async function seed(knex: Knex): Promise<void> {
   // Deletes ALL existing entries
   await knex('user_role').del();
 
+  await knex('user_group').del();
+
+  await knex('posts').del();
+
+  await knex('groups').del();
+
   await knex('staff').del();
 
   await knex('users').del();
@@ -149,37 +155,39 @@ export async function seed(knex: Knex): Promise<void> {
     },
   ]);
 
-  await knex<IGroup>('groups').insert([
-    {
-      facilitatorId: users[1].id,
-      language: 'en',
-      zipCode: 99999,
-      city: 'Anchorage',
-      limit: 5,
-      start: new Date(),
-      end: dayjs(new Date()).add(1, 'month').toDate(),
-      title: 'Test 1',
-    },
-    {
-      facilitatorId: users[1].id,
-      language: 'es',
-      zipCode: 99998,
-      city: 'Anchorage',
-      limit: 5,
-      start: new Date(),
-      end: dayjs(new Date()).add(1, 'month').toDate(),
-      title: 'Test 2',
-    },
-  ]);
+  const groups = await knex<IGroup>('groups')
+    .returning('id')
+    .insert([
+      {
+        facilitatorId: users[1].id,
+        language: 'en',
+        zipCode: 99999,
+        city: 'Anchorage',
+        limit: 5,
+        start: new Date(),
+        end: dayjs(new Date()).add(1, 'month').toDate(),
+        title: 'Test 1',
+      },
+      {
+        facilitatorId: users[1].id,
+        language: 'es',
+        zipCode: 99998,
+        city: 'Anchorage',
+        limit: 5,
+        start: new Date(),
+        end: dayjs(new Date()).add(1, 'month').toDate(),
+        title: 'Test 2',
+      },
+    ]);
 
   await knex('user_group').insert([
     {
       userId: users[3].id,
-      groupId: 1,
+      groupId: groups[0],
     },
     {
       userId: users[4].id,
-      groupId: 1,
+      groupId: groups[1],
     },
   ]);
 }

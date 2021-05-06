@@ -1,4 +1,15 @@
-import { Arg, Args, Authorized, Mutation, Query, Resolver } from 'type-graphql';
+import { ValidationError } from 'apollo-server-errors';
+import { SchemaError } from 'graphql-tools';
+import { decode } from 'jsonwebtoken';
+import {
+  Arg,
+  Args,
+  Authorized,
+  Ctx,
+  Mutation,
+  Query,
+  Resolver,
+} from 'type-graphql';
 import {
   GetGroupsArgs,
   IGroup,
@@ -6,6 +17,7 @@ import {
   GroupQuery,
 } from '../../classes/group';
 import { IUser } from '../../classes/user';
+import { Context } from '../../context';
 import { knex } from '../../database/connection';
 
 const baseQuery = () =>
@@ -87,6 +99,35 @@ export class GroupResolver {
   @Authorized('Staff', 'Admin')
   async removeGroup(@Arg('id') id: number) {
     await knex<IGroup>('groups').delete().where({ id });
+  }
+
+  @Mutation((_returns) => Number)
+  @Authorized('User')
+  async requestToJoin(@Arg('id') id: number, @Ctx() ctx: Context) {
+    const token = ctx.req.headers.authorization?.split(' ')[1] as string;
+    const decoded = decode(token) as any;
+
+    try {
+      const result = await knex('user_group')
+        .returning('groupId')
+        .insert({ groupId: id, userId: decoded.user.id });
+      return result[0];
+    } catch (error) {
+      return new ValidationError(error.message);
+    }
+  }
+
+  @Query((_returns) => [Number])
+  @Authorized('User')
+  async joinedGroups(@Ctx() ctx: Context) {
+    const token = ctx.req.headers.authorization?.split(' ')[1] as string;
+    const decoded = decode(token) as any;
+
+    const result = await knex('user_group')
+      .select('groupId')
+      .where({ userId: decoded.user.id });
+
+    return result.map((r) => r.groupId);
   }
 
   private mapGroup(group: any) {
