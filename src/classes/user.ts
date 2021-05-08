@@ -1,3 +1,5 @@
+import { decode } from 'jsonwebtoken';
+import { Context } from 'node:vm';
 import {
   ObjectType,
   Field,
@@ -28,6 +30,8 @@ export abstract class IUser extends IUserInput {
   id!: number;
   @Field((_type) => [RoleQuery])
   roles!: IRole[];
+  @Field()
+  confirmed?: boolean;
   @Field()
   created_at?: Date;
   @Field()
@@ -78,4 +82,10 @@ export class UserResetPassword implements Partial<IUser>, Partial<INonce> {
   nonce!: string;
   @Field()
   password!: string;
+}
+
+export function parseUserFromContext(ctx: Context) {
+  const token = ctx.req.headers.authorization?.split(' ')[1] as string;
+  const decoded = decode(token) as any;
+  return decoded.user as IUser;
 }

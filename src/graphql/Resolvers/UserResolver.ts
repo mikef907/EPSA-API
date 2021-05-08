@@ -3,7 +3,6 @@ import {
   Args,
   Authorized,
   Ctx,
-  ID,
   Mutation,
   Query,
   Resolver,
@@ -11,6 +10,7 @@ import {
 import {
   IUser,
   NewUserInput,
+  parseUserFromContext,
   UserInput,
   UserLogin,
   UserQuery,
@@ -25,37 +25,87 @@ import { INonce } from '../../classes/nonce';
 import dayjs from 'dayjs';
 import { v4 } from 'uuid';
 import sendEmail from '../../sendEmail';
-import { AuthenticationError, UserInputError } from 'apollo-server-express';
+import {
+  ApolloError,
+  AuthenticationError,
+  UserInputError,
+} from 'apollo-server-express';
 import { IRole } from '../../classes/role';
-import { IStaff } from '../../classes/staff';
+import { Context } from 'node:vm';
 
 @Resolver((_of) => IUser)
 export class UserResolver {
-  private readonly props = ['users.id', 'first_name', 'last_name', 'email'];
+  private readonly props = [
+    'users.id',
+    'first_name',
+    'last_name',
+    'email',
+    'confirmed',
+  ];
+
+  @Mutation((_returns) => Boolean)
+  async confirmation(@Arg('token') token: string) {
+    var nonce = await knex<INonce>('nonces')
+      .where({ nonce: token, used: false })
+      .andWhere('expiry', '>', new Date())
+      .first();
+
+    if (!nonce) return new AuthenticationError('Token is invalid');
+    else {
+      return await knex.transaction(async (trx) => {
+        await trx<IUser>('users')
+          .where({ id: nonce!.userId })
+          .update({ confirmed: true });
+
+        await trx<INonce>('nonces')
+          .where({ nonce: nonce!.nonce })
+          .update({ used: true });
+
+        return true;
+      });
+    }
+  }
+
+  @Query((_returns) => Boolean)
+  async resendConfirmation(@Ctx() ctx: Context) {
+    var user = parseUserFromContext(ctx);
+
+    if (!user.confirmed) {
+      var nonce = await this.generateNonce(user.id);
+
+      var confirmation = `<p>Hello ${user.first_name}</p>
+      <p>Welcome to EPSA!&nbsp; To complete the registration process please click this <a href="${AppRoot}confirmation/${nonce.nonce}">link</a>.</p>
+      <p>If the link does not work for you please copy and paste the url below into your browser window to complete the process.</p>
+      <p>${AppRoot}confirmation/${nonce.nonce}</p>`;
+
+      sendEmail(user.email, confirmation, 'EPSA Account Confirmation');
+      return true;
+    } else return false;
+  }
 
   @Mutation((_returns) => Boolean)
   async resetPassword(@Arg('input') input: UserResetPassword) {
     var nonce = await knex<INonce>('nonces')
       .where({ nonce: input.nonce, used: false })
+      .andWhere('expiry', '>', new Date())
       .first();
 
-    if (nonce) {
-      if (dayjs(nonce.expiry).isAfter(dayjs())) {
-        var password = await argon2.hash(input.password);
+    if (!nonce) throw new AuthenticationError('Token is invalid');
+    else {
+      var password = await argon2.hash(input.password);
 
-        await knex<IUser>('users')
+      return await knex.transaction(async (trx) => {
+        await trx<IUser>('users')
           .update({ password })
-          .where({ id: nonce.userId });
+          .where({ id: nonce!.userId });
 
-        await knex<INonce>('nonces')
+        await trx<INonce>('nonces')
           .update({ used: true })
-          .where({ nonce: nonce.nonce, userId: nonce.userId });
+          .where({ nonce: nonce!.nonce, userId: nonce!.userId });
 
         return true;
-      }
-      return new AuthenticationError('Token is expired');
+      });
     }
-    throw new AuthenticationError('Token is invalid');
   }
 
   @Mutation((_returns) => Boolean)
@@ -66,19 +116,14 @@ export class UserResolver {
       .first();
 
     if (user) {
-      var nonce = await knex<INonce>('nonces')
-        .returning(['nonce'])
-        .insert<INonce[]>({
-          nonce: v4(),
-          userId: user.id,
-          expiry: dayjs().add(1, 'day').toDate(),
-        });
+      var nonce = await this.generateNonce(user.id);
 
-      const resetLink = `<a href="${AppRoot}reset-password/${nonce[0].nonce}">reset link</a>`;
+      const resetLink = `<p>Greetings!</p>
+      <p>Here is a <a href="${AppRoot}reset-password/${nonce.nonce}">link</a> to reset your EPSA password.&nbsp;</p>
+      <p>If this link does not work for your please copy and paste the url below into your browser window to complete the process.</p>
+      <p>${AppRoot}reset-password/${nonce.nonce}</p>`;
 
-      console.log(resetLink);
-
-      await sendEmail(user.email, resetLink, 'Password Reset Link');
+      await sendEmail(user.email, resetLink, 'EPSA Password Reset');
 
       return true;
     }
@@ -149,32 +194,46 @@ export class UserResolver {
   async addUser(@Arg('newUser') newUser: NewUserInput) {
     newUser.password = await argon2.hash(newUser.password);
 
+    let user: IUser;
+
     try {
-      return await knex<IUser>('users')
-        .insert<IUser>(newUser)
-        .returning('*')
-        .then(async (_) => {
-          const user = _[0];
+      user = await knex.transaction(async (trx) => {
+        const _ = await knex<IUser>('users')
+          .insert<IUser>(newUser)
+          .returning('*');
 
-          var userRole = await knex<IRole>('roles')
-            .where({ name: 'User' })
-            .first();
+        const user = _[0];
 
-          await knex('user_role').insert([
-            {
-              userId: user.id,
-              roleId: userRole?.id,
-            },
-          ]);
+        var userRole = await knex<IRole>('roles')
+          .where({ name: 'User' })
+          .first();
 
-          user.roles = await this.getRoles(user.id);
-          return this.getToken(user);
-        });
+        await knex('user_role').insert([
+          {
+            userId: user.id,
+            roleId: userRole?.id,
+          },
+        ]);
+
+        user.roles = await this.getRoles(user.id);
+        return user;
+      });
     } catch (err) {
       if (err.code == '23505')
         throw new UserInputError('Account with email already exists');
-      else throw err;
+      else throw new ApolloError(err.message);
     }
+
+    const nonce = await this.generateNonce(user.id);
+
+    var confirmation = `<p>Hello ${user.first_name}</p>
+    <p>Welcome to EPSA!&nbsp; To complete the registration process please click this <a href="${AppRoot}confirmation/${nonce.nonce}">link</a>.</p>
+    <p>If the link does not work for you please copy and paste the url below into your browser window to complete the process.</p>
+    <p>${AppRoot}confirmation/${nonce.nonce}</p>`;
+
+    sendEmail(user.email, confirmation, 'EPSA Account Confirmation');
+
+    return this.getToken(user);
   }
 
   @Mutation((_returns) => String)
@@ -233,6 +292,17 @@ export class UserResolver {
         }
         throw new AuthenticationError('Invalid email or password');
       });
+  }
+
+  private async generateNonce(userId: number) {
+    const nonce = await knex<INonce>('nonces')
+      .returning(['nonce'])
+      .insert<INonce[]>({
+        nonce: v4(),
+        userId: userId,
+        expiry: dayjs().add(1, 'day').toDate(),
+      });
+    return nonce[0];
   }
 
   private async getRoles(userId: number) {

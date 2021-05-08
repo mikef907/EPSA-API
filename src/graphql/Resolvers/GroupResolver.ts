@@ -1,6 +1,4 @@
 import { ValidationError } from 'apollo-server-errors';
-import { SchemaError } from 'graphql-tools';
-import { decode } from 'jsonwebtoken';
 import {
   Arg,
   Args,
@@ -16,7 +14,7 @@ import {
   GroupInput,
   GroupQuery,
 } from '../../classes/group';
-import { IUser } from '../../classes/user';
+import { IUser, parseUserFromContext } from '../../classes/user';
 import { Context } from '../../context';
 import { knex } from '../../database/connection';
 
@@ -104,13 +102,12 @@ export class GroupResolver {
   @Mutation((_returns) => Number)
   @Authorized('User')
   async requestToJoin(@Arg('id') id: number, @Ctx() ctx: Context) {
-    const token = ctx.req.headers.authorization?.split(' ')[1] as string;
-    const decoded = decode(token) as any;
+    const user = parseUserFromContext(ctx);
 
     try {
       const result = await knex('user_group')
         .returning('groupId')
-        .insert({ groupId: id, userId: decoded.user.id });
+        .insert({ groupId: id, userId: user.id });
       return result[0];
     } catch (error) {
       return new ValidationError(error.message);
@@ -120,12 +117,11 @@ export class GroupResolver {
   @Query((_returns) => [Number])
   @Authorized('User')
   async joinedGroups(@Ctx() ctx: Context) {
-    const token = ctx.req.headers.authorization?.split(' ')[1] as string;
-    const decoded = decode(token) as any;
+    const user = parseUserFromContext(ctx);
 
     const result = await knex('user_group')
       .select('groupId')
-      .where({ userId: decoded.user.id });
+      .where({ userId: user.id });
 
     return result.map((r) => r.groupId);
   }

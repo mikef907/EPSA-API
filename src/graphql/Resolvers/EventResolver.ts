@@ -2,7 +2,6 @@ import dayjs from 'dayjs';
 import { Arg, Args, Mutation, Query, Resolver } from 'type-graphql';
 import {
   IEvent,
-  IEventInput,
   EventQuery,
   GetEventsArgs,
   EventInput,

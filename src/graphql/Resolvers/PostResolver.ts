@@ -1,5 +1,3 @@
-import dayjs from 'dayjs';
-import { decode } from 'jsonwebtoken';
 import {
   Arg,
   Args,
@@ -10,6 +8,7 @@ import {
   Resolver,
 } from 'type-graphql';
 import { GetPostsArgs, IPost, PostInput, PostQuery } from '../../classes/post';
+import { parseUserFromContext } from '../../classes/user';
 import { Context } from '../../context';
 import { knex } from '../../database/connection';
 
@@ -60,12 +59,11 @@ export class PostResolver {
   @Mutation((_returns) => Number)
   @Authorized(['Staff', 'Admin'])
   async addPost(@Arg('post') post: PostInput, @Ctx() ctx: Context) {
-    const token = ctx.req.headers.authorization?.split(' ')[1] as string;
-    const decoded = decode(token) as any;
+    const user = parseUserFromContext(ctx);
 
     const staff = await knex('staff')
       .select('userId')
-      .where({ userId: decoded.user.id })
+      .where({ userId: user.id })
       .first();
 
     post.authorId = staff.userId;
