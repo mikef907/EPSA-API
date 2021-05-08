@@ -34,7 +34,7 @@ const baseQuery = () =>
 @Resolver((_of) => IGroup)
 export class GroupResolver {
   @Query((_returns) => [GroupQuery])
-  async groups(@Args() { take, zipCode, language }: GetGroupsArgs) {
+  async groups(@Args() { take, zipCode, language, active }: GetGroupsArgs) {
     let q = baseQuery();
 
     if (zipCode) q = q.where({ zipCode });
@@ -42,6 +42,8 @@ export class GroupResolver {
     if (language) q = q.where({ language });
 
     if (take) q = q.limit(take);
+
+    if (active) q = q.where('end', '>', new Date());
 
     return await q.then((groups) =>
       groups.map((group) => this.mapGroup(group))
@@ -99,16 +101,31 @@ export class GroupResolver {
     await knex<IGroup>('groups').delete().where({ id });
   }
 
-  @Mutation((_returns) => Number)
+  @Mutation((_returns) => Boolean)
   @Authorized('User')
   async requestToJoin(@Arg('id') id: number, @Ctx() ctx: Context) {
     const user = parseUserFromContext(ctx);
 
     try {
-      const result = await knex('user_group')
-        .returning('groupId')
-        .insert({ groupId: id, userId: user.id });
-      return result[0];
+      return await knex.transaction(async (trx) => {
+        const count = await trx('user_group')
+          .forUpdate('user_group')
+          .where({ groupId: id });
+
+        const group = await trx<IGroup>('groups')
+          .select('limit')
+          .where({ id })
+          .first();
+
+        if (count.length >= group!.limit) {
+          throw new ValidationError('Group is full');
+        }
+        const result = await knex('user_group')
+          .returning('groupId')
+          .insert({ groupId: id, userId: user.id });
+
+        return true;
+      });
     } catch (error) {
       return new ValidationError(error.message);
     }
@@ -121,9 +138,20 @@ export class GroupResolver {
 
     const result = await knex('user_group')
       .select('groupId')
-      .where({ userId: user.id });
+      .join('groups', 'id', '=', 'groupId')
+      .where({ userId: user.id })
+      .andWhere('groups.end', '>', new Date());
 
     return result.map((r) => r.groupId);
+  }
+
+  @Mutation((_returns) => Boolean)
+  async requestToLeave(@Arg('id') id: Number, @Ctx() ctx: Context) {
+    const user = parseUserFromContext(ctx);
+
+    await knex('user_group').where({ userId: user.id, groupId: id }).delete();
+
+    return true;
   }
 
   private mapGroup(group: any) {

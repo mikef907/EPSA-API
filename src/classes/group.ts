@@ -83,4 +83,6 @@ export class GetGroupsArgs {
   zipCode?: number;
   @Field({ nullable: true })
   language?: string;
+  @Field({ nullable: true })
+  active?: boolean;
 }

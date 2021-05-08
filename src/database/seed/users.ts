@@ -163,7 +163,7 @@ export async function seed(knex: Knex): Promise<void> {
         language: 'en',
         zipCode: 99999,
         city: 'Anchorage',
-        limit: 5,
+        limit: 1,
         start: new Date(),
         end: dayjs(new Date()).add(1, 'month').toDate(),
         title: 'Test 1',
@@ -178,16 +178,26 @@ export async function seed(knex: Knex): Promise<void> {
         end: dayjs(new Date()).add(1, 'month').toDate(),
         title: 'Test 2',
       },
+      {
+        facilitatorId: users[1].id,
+        language: 'es',
+        zipCode: 99998,
+        city: 'Anchorage',
+        limit: 5,
+        start: dayjs(new Date()).subtract(2, 'month').toDate(),
+        end: dayjs(new Date()).subtract(1, 'month').toDate(),
+        title: 'Test 3',
+      },
     ]);
 
-  await knex('user_group').insert([
-    {
-      userId: users[3].id,
-      groupId: groups[0],
-    },
-    {
-      userId: users[4].id,
-      groupId: groups[1],
-    },
-  ]);
+  // await knex('user_group').insert([
+  //   {
+  //     userId: users[3].id,
+  //     groupId: groups[0],
+  //   },
+  //   {
+  //     userId: users[4].id,
+  //     groupId: groups[1],
+  //   },
+  // ]);
 }
