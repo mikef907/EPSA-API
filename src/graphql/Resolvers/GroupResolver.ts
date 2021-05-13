@@ -146,6 +146,7 @@ export class GroupResolver {
   }
 
   @Mutation((_returns) => Boolean)
+  @Authorized('User')
   async requestToLeave(@Arg('id') id: Number, @Ctx() ctx: Context) {
     const user = parseUserFromContext(ctx);
 
