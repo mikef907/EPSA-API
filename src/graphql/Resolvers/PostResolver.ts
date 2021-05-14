@@ -57,7 +57,7 @@ export class PostResolver {
   }
 
   @Mutation((_returns) => Number)
-  @Authorized(['Staff', 'Admin'])
+  @Authorized(['Staff'])
   async addPost(@Arg('post') post: PostInput, @Ctx() ctx: Context) {
     const user = parseUserFromContext(ctx);
 
@@ -73,6 +73,7 @@ export class PostResolver {
   }
 
   @Mutation((_returns) => Boolean)
+  @Authorized(['Staff'])
   async updatePost(@Arg('post') post: PostInput) {
     if (post.id) {
       await knex('posts').update(post).where({ id: post.id });
@@ -81,6 +82,7 @@ export class PostResolver {
   }
 
   @Mutation((_returns) => Boolean)
+  @Authorized(['Staff'])
   async removePost(@Arg('id') id: number) {
     await knex('posts').where({ id }).delete();
     return true;

@@ -9,6 +9,7 @@ import {
 } from 'type-graphql';
 import {
   IUser,
+  MyProfileInput,
   NewUserInput,
   parseUserFromContext,
   UserInput,
@@ -131,7 +132,7 @@ export class UserResolver {
   }
 
   @Query((_returns) => [UserQuery])
-  @Authorized(['Staff', 'Admin'])
+  @Authorized(['Admin'])
   async users(@Args() { inRoles, notInRoles }: UsersArgs) {
     const users = await knex
       .select(...this.props, 'name as role', 'roleId')
@@ -175,6 +176,7 @@ export class UserResolver {
   }
 
   @Query((_returns) => UserQuery)
+  @Authorized('Admin')
   async user(@Arg('id') id: number) {
     return await knex
       .select<IUser>(this.props)
@@ -188,6 +190,45 @@ export class UserResolver {
 
         return user;
       });
+  }
+
+  @Query((_returns) => UserQuery)
+  @Authorized('User')
+  async myProfile(@Ctx() ctx: Context) {
+    const user = parseUserFromContext(ctx);
+
+    const result = await knex<IUser>('users')
+      .select<IUser>(this.props)
+      .where({ id: user.id })
+      .first();
+
+    if (!result) {
+      throw new ApolloError('User record not found');
+    } else {
+      result.roles = await this.getRoles(result.id);
+      return result;
+    }
+  }
+
+  @Mutation((_returns) => Boolean)
+  @Authorized('User')
+  async updateMyProfile(
+    @Ctx() ctx: Context,
+    @Arg('user') input: MyProfileInput
+  ) {
+    const user = parseUserFromContext(ctx);
+
+    if (user.id !== parseInt(input.id))
+      throw new AuthenticationError('User id mismatch');
+
+    if (input.password) input.password = await argon2.hash(input.password);
+    else delete input.password;
+
+    delete input.id;
+
+    await knex<IUser>('users').update(input).where({ id: user.id });
+
+    return true;
   }
 
   @Mutation((_returns) => String)

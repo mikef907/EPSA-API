@@ -1,5 +1,5 @@
 import dayjs from 'dayjs';
-import { Arg, Args, Mutation, Query, Resolver } from 'type-graphql';
+import { Arg, Args, Authorized, Mutation, Query, Resolver } from 'type-graphql';
 import {
   IEvent,
   EventQuery,
@@ -20,6 +20,7 @@ export class EventResolver {
   }
 
   @Mutation((_of) => EventQuery)
+  @Authorized('Staff')
   async addEvent(@Arg('event') event: EventInput) {
     if (!dayjs(event.end).isValid()) delete event.end;
 
@@ -31,6 +32,7 @@ export class EventResolver {
   }
 
   @Mutation((_of) => EventQuery)
+  @Authorized('Staff')
   async updateEvent(@Arg('event') event: EventInput) {
     if (!dayjs(event.end).isValid()) delete event.end;
 

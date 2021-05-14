@@ -77,7 +77,7 @@ export class GroupResolver {
   }
 
   @Mutation((_returns) => Number)
-  @Authorized('Staff', 'Admin')
+  @Authorized('Staff')
   async createGroup(@Arg('group') groupInput: GroupInput) {
     const result = await knex<IGroup>('groups')
       .insert(groupInput)
@@ -86,7 +86,7 @@ export class GroupResolver {
   }
 
   @Mutation((_returns) => Boolean)
-  @Authorized('Staff', 'Admin')
+  @Authorized('Staff')
   async updateGroup(
     @Arg('id') id: number,
     @Arg('group') groupInput: GroupInput
@@ -96,7 +96,7 @@ export class GroupResolver {
   }
 
   @Mutation((_returns) => Boolean)
-  @Authorized('Staff', 'Admin')
+  @Authorized('Staff')
   async removeGroup(@Arg('id') id: number) {
     await knex<IGroup>('groups').delete().where({ id });
   }

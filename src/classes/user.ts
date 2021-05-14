@@ -13,7 +13,7 @@ import { IRole, RoleQuery } from './role';
 
 @InterfaceType()
 export abstract class IUserInput {
-  @Field((_type) => ID)
+  @Field((_type) => ID, { nullable: true })
   id?: number;
   @Field()
   first_name!: string;
@@ -67,6 +67,14 @@ export class UserInput extends IUserInput {
   last_name!: string;
   @Field()
   email!: string;
+  password?: string;
+}
+
+@InputType()
+export class MyProfileInput extends UserInput {
+  @Field((_type) => ID, { nullable: true })
+  id: any;
+  @Field({ nullable: true })
   password?: string;
 }
 

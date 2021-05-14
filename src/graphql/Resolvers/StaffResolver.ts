@@ -1,6 +1,13 @@
 import { FileUpload, GraphQLUpload } from 'graphql-upload';
 import { createWriteStream } from 'fs';
-import { Arg, Authorized, Mutation, Query, Resolver } from 'type-graphql';
+import {
+  Arg,
+  ArgumentValidationError,
+  Authorized,
+  Mutation,
+  Query,
+  Resolver,
+} from 'type-graphql';
 import {
   IStaff,
   StaffUpdate,
@@ -10,6 +17,7 @@ import {
 import { IUser } from '../../classes/user';
 import { knex } from '../../database/connection';
 import { IRole } from '../../classes/role';
+import { ValidationError } from 'apollo-server-errors';
 
 @Resolver((_of) => IStaff)
 export class StaffResolver {
@@ -41,14 +49,24 @@ export class StaffResolver {
   }
 
   @Query((_returns) => StaffQuery)
-  async staff(@Arg('id') id: number) {
-    return await knex
-      .select(['*', 'staff.id'])
-      .where({ 'staff.id': id })
-      .join('users', 'staff.userId', '=', 'users.id')
-      .from('staff')
-      .first()
-      .then(async (result) => {
+  @Authorized()
+  async staff(
+    @Arg('id', { nullable: true }) id?: number,
+    @Arg('userId', { nullable: true }) userId?: number
+  ) {
+    if (!id && !userId) {
+      throw new ValidationError('Must have at least 1 argument (id, userId)');
+    } else {
+      let q = knex
+        .select(['*', 'staff.id'])
+        .join('users', 'staff.userId', '=', 'users.id')
+        .from('staff')
+        .first();
+
+      if (id) q = q.where({ 'staff.id': id });
+      else q = q.where({ 'staff.userId': userId });
+
+      return await q.then(async (result) => {
         const staff: IStaff = {
           id: result.id,
           userId: result.userId,
@@ -65,6 +83,7 @@ export class StaffResolver {
         };
         return staff;
       });
+    }
   }
 
   @Mutation((_returns) => Number)
