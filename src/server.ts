@@ -15,6 +15,7 @@ import https from 'https';
 import fs from 'fs';
 import { PostResolver } from './graphql/Resolvers/PostResolver';
 import { GroupResolver } from './graphql/Resolvers/GroupResolver';
+import { RoleResolver } from './graphql/Resolvers/RoleResolver';
 
 export const customAuthChecker: AuthChecker<Context> = (
   { root, args, context, info },
@@ -56,6 +57,7 @@ async function main() {
       StaffResolver,
       PostResolver,
       GroupResolver,
+      RoleResolver,
     ],
     authChecker: customAuthChecker,
   });

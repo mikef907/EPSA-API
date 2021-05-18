@@ -211,6 +211,26 @@ export class UserResolver {
   }
 
   @Mutation((_returns) => Boolean)
+  @Authorized('Admin')
+  async assignRole(
+    @Arg('userId') userId: number,
+    @Arg('roleId') roleId: number
+  ) {
+    await knex('user_role').insert({ userId, roleId });
+    return true;
+  }
+
+  @Mutation((_returns) => Boolean)
+  @Authorized('Admin')
+  async removeRole(
+    @Arg('userId') userId: number,
+    @Arg('roleId') roleId: number
+  ) {
+    await knex('user_role').where({ userId, roleId }).del();
+    return true;
+  }
+
+  @Mutation((_returns) => Boolean)
   @Authorized('User')
   async updateMyProfile(
     @Ctx() ctx: Context,
