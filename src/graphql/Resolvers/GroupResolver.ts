@@ -99,6 +99,7 @@ export class GroupResolver {
   @Authorized('Staff')
   async removeGroup(@Arg('id') id: number) {
     await knex<IGroup>('groups').delete().where({ id });
+    return true;
   }
 
   @Mutation((_returns) => Boolean)
