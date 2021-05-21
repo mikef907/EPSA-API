@@ -51,4 +51,10 @@ export class EventResolver {
       .where({ id })
       .first();
   }
+
+  @Mutation((_returns) => Boolean)
+  async deleteEvent(@Arg('id') id: number) {
+    await knex('events').where({ id }).del();
+    return true;
+  }
 }
