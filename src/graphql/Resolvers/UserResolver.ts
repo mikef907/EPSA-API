@@ -279,7 +279,7 @@ export class UserResolver {
         user.roles = await this.getRoles(user.id);
         return user;
       });
-    } catch (err) {
+    } catch (err: any) {
       if (err.code == '23505')
         throw new UserInputError('Account with email already exists');
       else throw new ApolloError(err.message);
@@ -322,7 +322,7 @@ export class UserResolver {
           _user.roles = await this.getRoles(_user.id);
           return this.getToken(_user);
         });
-    } catch (err) {
+    } catch (err: any) {
       if (err.code == '23505')
         throw new UserInputError('Account with email already exists');
       else throw err;

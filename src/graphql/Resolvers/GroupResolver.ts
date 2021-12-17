@@ -127,7 +127,7 @@ export class GroupResolver {
 
         return true;
       });
-    } catch (error) {
+    } catch (error: any) {
       return new ValidationError(error.message);
     }
   }

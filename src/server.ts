@@ -16,6 +16,7 @@ import fs from 'fs';
 import { PostResolver } from './graphql/Resolvers/PostResolver';
 import { GroupResolver } from './graphql/Resolvers/GroupResolver';
 import { RoleResolver } from './graphql/Resolvers/RoleResolver';
+import { ApolloServerPluginUsageReporting } from 'apollo-server-core';
 
 export const customAuthChecker: AuthChecker<Context> = (
   { root, args, context, info },
@@ -79,12 +80,13 @@ async function main() {
       };
       return context;
     },
-    uploads: false,
   });
 
   app.use(graphqlUploadExpress({ maxFiles: 1 }));
 
   app.use('/images', express.static(path.join(__dirname, '/../../../images')));
+
+  await server.start();
 
   server.applyMiddleware({ app, bodyParserConfig: { limit: '10mb' } });
 
